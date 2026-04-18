@@ -1,4 +1,4 @@
-# Multi-Agent Dev Rules (Forge v0.8)
+# Multi-Agent Dev Rules (Forge v1.0)
 
 ## Core rules (all agents)
 
