@@ -139,6 +139,45 @@ New project starts at A2. Skip dry-run only at A4+.
 | .claude/hooks/mempal-save.sh | auto-save to palace every N exchanges | hook (Stop) |
 | .claude/hooks/mempal-precompact.sh | emergency save before context compression | hook (PreCompact) |
 
+## Security-analyst invocation rule
+
+SecurityAnalyst is MANDATORY (regardless of complexity level) when diff contains:
+- Server Actions (`app/actions/`, `"use server"`)
+- Auth/token handling (`auth`, `token`, `session`, `credential`)
+- DB mutations (`insert`, `update`, `delete`, `upsert`)
+- Crypto or secret management
+
+L1/L2 tasks normally skip SecurityAnalyst, but this rule overrides for the above cases.
+
+## DB migration review rule
+
+Any task that creates or modifies migration files (`migrations/`, `*.sql`) MUST include:
+- RealityChecker verifies SQL syntax and constraint correctness
+- If L3+: Architect reviews schema design before Developer implements
+- Migration files are never committed without at least one review pass
+
+## Spec update on deviation
+
+If Developer changes function signatures, API contracts, or file structure from what `## spec` section describes:
+- Developer MUST update the `## spec` section in the task file before writing handoff
+- PM verifies spec matches implementation in Step 5.5 watchdog
+
+## Pre-phase checklist
+
+Before starting a new phase, PM checks:
+1. All carry-forward decisions from previous retro are resolved or explicitly re-deferred
+2. `memory/decisions.md` has no unresolved `[DEFERRED]` items older than 1 phase
+3. If unresolved items exist → show user, get confirmation before proceeding
+
+## Progress logging
+
+PM appends to `.claude/progress.log` at:
+- Task START (Step 2): `[date] TASK-XXX START`
+- Task DONE (Step 13): `[date] TASK-XXX DONE`
+- Watchdog events: `[date] TASK-XXX [event]`
+
+This is mandatory, not optional. Every task must have START and DONE entries.
+
 ## Regression metrics
 
 PM reads `.claude/metrics.log` at session start:

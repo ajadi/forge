@@ -160,6 +160,7 @@ Old test regression → immediate STOP, tell user.
 ### Step 8: Review gate (max 3 retries)
 
 Parallel: code-reviewer + security-analyst.
+SecurityAnalyst override: even for L1/L2, run SecurityAnalyst if diff touches Server Actions, auth/tokens, DB mutations, or crypto (see pm-ref.md "Security-analyst invocation rule").
 "Use git diff HEAD~1 for changes. Read tasks/TASK-XXX.md sections spec+architect+developer."
 
 APPROVED + SAFE/MINOR → Step 9.
