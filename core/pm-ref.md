@@ -1,4 +1,4 @@
-# PM Reference (Forge v0.9)
+# PM Reference (Forge v1.0)
 
 > Team roster and escalation rules → .claude/AGENTS.md
 

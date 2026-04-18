@@ -13,7 +13,7 @@ git clone https://github.com/ajadi/forge.git
 # Install into your project (choose a preset)
 bash forge/install.sh /path/to/your/project --preset solo        # 3 agents
 bash forge/install.sh /path/to/your/project --preset small-team   # 14 agents
-bash forge/install.sh /path/to/your/project --preset full         # 36 agents
+bash forge/install.sh /path/to/your/project --preset full         # 37 agents
 
 # Or pick specific extensions
 bash forge/install.sh /path/to/your/project --ext security,frontend
@@ -53,7 +53,7 @@ PM agent (opus) ── reads pm-ref.md, AGENTS.md
  +-- Security Analyst (sonnet) ── OWASP/STRIDE audit
  +-- Reality Checker (sonnet) ── final gate, default NEEDS_WORK
  +-- Architect (opus) ── designs L3-L4 solutions
- +-- ... (36 agents total)
+ +-- ... (37 agents total)
 ```
 
 ### Key Design Principles
@@ -85,7 +85,7 @@ forge/
     ext-quality/            # performance-profiler, refactoring, test-reviewer, integration-tester
     ext-docs/               # documentation, changelog-agent
     ext-planning/           # estimator, consilium
-    ext-reflection/         # reflect, dream, optimizer, onboarding
+    ext-reflection/         # reflect, dream, optimizer, onboarding, retro
 
   presets/                  # Quick-start configurations
   domain-examples/          # Example of project-specific agents (VPN domain)
@@ -119,7 +119,7 @@ forge/
 | **ext-quality** | performance-profiler, refactoring, test-reviewer, integration-tester | Large codebases |
 | **ext-docs** | documentation, changelog-agent | Open-source, team projects |
 | **ext-planning** | estimator, consilium | L3-L4 tasks, team planning |
-| **ext-reflection** | reflect, dream, optimizer, onboarding | Long-running projects |
+| **ext-reflection** | reflect, dream, optimizer, onboarding, retro | Long-running projects |
 
 ## Key Commands
 

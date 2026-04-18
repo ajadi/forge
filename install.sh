@@ -1,5 +1,5 @@
 #!/bin/bash
-# Forge v0.9 — modular multi-agent framework installer
+# Forge v1.0 — modular multi-agent framework installer
 # Usage: bash install.sh [target_dir] [--ext ext1,ext2,...] [--all] [--preset solo|small-team|full] [--list]
 
 set -euo pipefail
