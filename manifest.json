@@ -1,6 +1,6 @@
 {
   "name": "forge",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Modular multi-agent development framework for Claude Code",
   "core": {
     "agents": [
@@ -15,7 +15,8 @@
     ],
     "hooks": [
       "session-start", "session-stop", "validate-commit", "validate-push",
-      "pre-compact", "log-agent", "stop-check"
+      "pre-compact", "log-agent", "stop-check", "detect-gaps", "check-blockers",
+      "mempal-save", "mempal-precompact"
     ],
     "skills": ["next-task", "status"],
     "configs": ["pm-ref.md", "settings.json", "statusline.sh"],

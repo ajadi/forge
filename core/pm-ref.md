@@ -1,4 +1,4 @@
-# PM Reference Tables (Forge v1.0)
+# PM Reference Tables (Forge v2.0)
 
 Lookup tables for PM agent. No workflow here — workflow is in pm.md.
 
@@ -135,6 +135,9 @@ New project starts at A2. Skip dry-run only at A4+.
 | .claude/locks.json | locked files | PM |
 | .claude/progress.log | action log | PM |
 | .claude/metrics.log | regression metrics | session-stop hook |
+| palace (MemPalace) | semantic memory, knowledge graph, agent diaries | all agents via MCP |
+| .claude/hooks/mempal-save.sh | auto-save to palace every N exchanges | hook (Stop) |
+| .claude/hooks/mempal-precompact.sh | emergency save before context compression | hook (PreCompact) |
 
 ## Regression metrics
 

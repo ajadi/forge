@@ -63,7 +63,11 @@ echo "==========================================="
 # Check if dream consolidation is needed
 DREAM_STATE=".claude/dream-state.json"
 if [ -f "$DREAM_STATE" ]; then
-    DREAM_CHECK=$(python3 -c "
+    DREAM_PY=""
+    if command -v python3 >/dev/null 2>&1; then DREAM_PY="python3"
+    elif command -v python >/dev/null 2>&1; then DREAM_PY="python"
+    fi
+    DREAM_CHECK=$($DREAM_PY -c "
 import json, sys
 from datetime import datetime, timezone
 

@@ -1,19 +1,10 @@
-# Multi-Agent Dev Rules (Forge v1.0)
+# Multi-Agent Dev Rules (Forge v2.0)
 
 ## Core rules (all agents)
 
 ORCHESTRATOR NEVER IMPLEMENTS: Claude (orchestrator) must NEVER edit files, delete files, run code, or implement anything directly. ALL implementation goes through PM. No exceptions.
 
-PIPELINE BY COMPLEXITY: every task goes through a pipeline matched to its complexity level. PM assesses complexity BEFORE starting.
-
-| Level | Scope | Pipeline |
-|-------|-------|----------|
-| L1 — Quick Fix | 1 file, <50 lines | Developer → RealityChecker → commit |
-| L2 — Enhancement | 2-5 files, <200 lines | Developer → CodeReviewer → RealityChecker → commit |
-| L3 — Feature | 5-15 files, 200-1000 lines | Architect → Developer → CodeReviewer + SecurityAnalyst → UnitTester → RealityChecker → commit |
-| L4 — Major | 15+ files, >1000 lines | Full pipeline (see pm-ref.md) + Consilium at design phase |
-
-If unsure — go one level up.
+PIPELINE BY COMPLEXITY: every task goes through a pipeline matched to its complexity level (L1-L4). PM assesses complexity BEFORE starting. See pm-ref.md for the full complexity table and pipeline routing. If unsure — go one level up.
 
 <important if="you encounter unclear business logic or missing requirements">
 AMBIGUITY: if business logic unclear → add OQ-XXX to tz.md → return PM: `BLOCKED: OQ-XXX [blocker: task|track|project]`. Never assume. Never continue.
@@ -44,6 +35,8 @@ BACKGROUND: always run agents with `run_in_background: true`. Stay available to 
 PARALLEL COORDINATION: orchestrator owns conflict resolution. Before launching parallel PM agents: check file overlap. No overlap → parallel. Overlap → sequential.
 
 AUTONOMOUS EXECUTION: once the user gives a task, execute it to completion without asking for confirmation at intermediate steps. Only stop if genuinely blocked (BLOCKED: OQ-XXX).
+
+MEMORY PROTOCOL: All agents use MemPalace (MCP server) for memory operations. On session start, call `mempalace_status` to load protocol. Before stating facts about the project, search palace via `mempalace_search`. After sessions, write diary via `mempalace_diary_write`. Palace is the primary memory backend. If MemPalace is unavailable, agents fall back to memory/*.md files.
 
 DEFINITION OF DONE: a task is complete only when: (1) code committed to git, (2) tests pass (L3+ with new logic), (3) result reported to user.
 

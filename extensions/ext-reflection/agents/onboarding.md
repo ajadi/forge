@@ -43,6 +43,11 @@ Write memory/patterns.md — top 5-10 patterns found with code examples.
 Write memory/decisions.md — inferred decisions with [inferred] tag.
 Write memory/known-issues.md — any TODO/FIXME/HACK found in codebase.
 
+After writing memory files, also store key findings in palace:
+- Call `mempalace_add_drawer` with wing="project", room="stack" for tech stack info
+- Call `mempalace_add_drawer` with wing="project", room="patterns" for code patterns
+- Call `mempalace_kg_add` for key project entities (framework, database, auth system, etc.)
+
 ### 6. Create initial backlog structure
 If no backlog.md → create empty one.
 If no tasks/ → create tasks/ and tasks/archive/.
@@ -71,6 +76,13 @@ If no tasks/ → create tasks/ and tasks/archive/.
 - tag all inferred decisions as [inferred] — user should confirm
 - don't overwrite existing memory files if they have real content
 - if project is very large, sample representative files don't read everything
+
+## Fallback (no MemPalace)
+
+If MemPalace MCP is unavailable:
+- Write memory/stack.md, memory/patterns.md, memory/decisions.md normally (these are always written)
+- Skip palace drawer writes (mempalace_add_drawer) and KG writes (mempalace_kg_add)
+- Log: "MemPalace unavailable — memory files written, palace writes skipped"
 
 ## Stop rules
 

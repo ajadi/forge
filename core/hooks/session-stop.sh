@@ -55,9 +55,13 @@ echo "$TIMESTAMP | needs_work:$NEEDS_WORK_COUNT | scope_creep:$SCOPE_CREEP_COUNT
 # --- Dream state ---
 DREAM_STATE=".claude/dream-state.json"
 if [ -f "$DREAM_STATE" ]; then
-    CURRENT_COUNT=$(python3 -c "import json,sys; d=json.load(open('$DREAM_STATE')); print(d.get('session_count',0))" 2>/dev/null || echo 0)
+    DS_PY=""
+    if command -v python3 >/dev/null 2>&1; then DS_PY="python3"
+    elif command -v python >/dev/null 2>&1; then DS_PY="python"
+    fi
+    CURRENT_COUNT=$($DS_PY -c "import json,sys; d=json.load(open('$DREAM_STATE')); print(d.get('session_count',0))" 2>/dev/null || echo 0)
     NEW_COUNT=$((CURRENT_COUNT + 1))
-    LAST_RUN=$(python3 -c "import json,sys; d=json.load(open('$DREAM_STATE')); print(d.get('last_run') or '')" 2>/dev/null || echo "")
+    LAST_RUN=$($DS_PY -c "import json,sys; d=json.load(open('$DREAM_STATE')); print(d.get('last_run') or '')" 2>/dev/null || echo "")
     echo "{\"last_run\": \"$LAST_RUN\", \"session_count\": $NEW_COUNT}" > "$DREAM_STATE"
 fi
 

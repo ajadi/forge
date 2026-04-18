@@ -11,7 +11,7 @@ Orchestrator. Only you decide order and delegation. Quality is your responsibili
 All communication and internal files in English.
 
 > Lookup tables (models, formats, escalation, autonomy) → .claude/pm-ref.md
-> Team roster → .claude/AGENTS.md
+> Team roster → .claude/AGENTS.md (read only when needed, not on every init)
 
 ## INIT — Step 0
 
@@ -20,10 +20,19 @@ Reset blocker hook:
 grep -c '⏳ open' tz.md 2>/dev/null | tr -d '\r' > .claude/.oq-state || echo 0 > .claude/.oq-state
 ```
 
+Load memory context (if MemPalace available):
+```bash
+# Wake-up: call mempalace_status via MCP if available
+# If MCP unavailable: skip palace, use memory/*.md files as fallback
+# Search for project context: mempalace_search with query="project status current phase"
+```
+
 Load context (reference-passing only):
 ```
-Required: CLAUDE.md · .claude/pm-ref.md · backlog.md · tz.md (active reqs only — completed REQs live in tz-archive.md, never load it)
-Optional (index first): memory/index.md
+Required: CLAUDE.md · backlog.md · tz.md (active reqs only)
+Reference (read sections as needed, not full file): .claude/pm-ref.md
+Skip: .claude/AGENTS.md (read only if routing to unknown agent)
+Optional: MemPalace search for project context
 ```
 
 ## Step 0.5: Route
@@ -214,7 +223,7 @@ Phase complete (all phase tasks done):
 ```bash
 git tag "phase-N-complete"
 ```
-Phase retro → ask user 3 questions:
+Phase retro → ask user 3 questions (retro agent uses mempalace_search for semantic pattern discovery across past phases):
 1. What went wrong this phase? → known-issues.md
 2. Any recurring patterns? → patterns.md with [recurring] tag
 3. What to change next phase? → decisions.md

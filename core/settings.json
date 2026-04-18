@@ -4,6 +4,12 @@
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
     "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "70"
   },
+  "mcpServers": {
+    "mempalace": {
+      "command": "python",
+      "args": ["-m", "mempalace.mcp_server"]
+    }
+  },
   "statusLine": {
     "type": "command",
     "command": "bash .claude/statusline.sh"
@@ -103,6 +109,11 @@
             "type": "command",
             "command": "bash .claude/hooks/pre-compact.sh",
             "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/mempal-precompact.sh",
+            "timeout": 30
           }
         ]
       }
@@ -118,6 +129,11 @@
             "type": "command",
             "command": "bash .claude/hooks/session-stop.sh",
             "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/mempal-save.sh",
+            "timeout": 30
           }
         ]
       }

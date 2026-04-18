@@ -1,9 +1,9 @@
 # Forge Preset: Full Pipeline
-# 36 agents, comprehensive coverage
+# 37 agents, comprehensive coverage
 # Best for: production apps, team development, regulated environments
 
-agents: core (all 13) + all extensions (23)
-commands: all (30)
-hooks: all (7)
+agents: core (all 13) + all extensions (24)
+commands: all (28)
+hooks: all (11)
 extensions: all (security, frontend, devops, quality, docs, planning, reflection)
 pipeline: L1 through L4 with all quality gates

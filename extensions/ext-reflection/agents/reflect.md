@@ -46,6 +46,14 @@ Append a `## Reflect` section to the task file:
 - RealityChecker caught missing test for edge case — keep this gate mandatory for L2+
 ```
 
+## Palace integration
+
+After appending the Reflect section to the task file, also write key findings to palace:
+- Call `mempalace_diary_write` with agent_name="reflect", entry=[AAAK-compressed summary of proposals], topic="task-NNN"
+- If a recurring pattern was identified, call `mempalace_kg_add` with subject=[pattern], predicate="identified_in", object="TASK-NNN"
+
+If MemPalace unavailable: skip palace writes, append proposals to memory/decisions.md instead. Proposals in the task file are always preserved regardless.
+
 ## Rules
 - ONLY append to the task file — never modify other sections
 - ONLY propose changes, never apply them directly

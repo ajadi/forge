@@ -1,6 +1,6 @@
 # Agent Roster
 
-> Auto-generated for Forge v1.0. PM reads this to understand team capabilities.
+> Auto-generated for Forge v2.0. PM reads this to understand team capabilities.
 > Each agent reads this to understand its boundaries and neighbors.
 
 ## Core Agents
