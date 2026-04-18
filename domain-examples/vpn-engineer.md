@@ -14,33 +14,33 @@ Expert in deploying and configuring self-hosted VPN infrastructure based on Xray
 - **3X-UI panel**: installation (docker and bare-metal), inbound creation, user management, panel security hardening, backup/restore
 - **Xray protocols**: VLESS, VMESS, Trojan, Shadowsocks — transport selection (TCP, WebSocket, gRPC, HTTP/2, QUIC), TLS/XTLS/Reality configuration
 - **Client config generation**: producing `vless://`, `vmess://`, `trojan://` URIs and QR codes; per-client UUID management
-- **Multi-server deployment**: replicating config across CH/NL/RU/IL nodes, load balancing, failover routing
+- **Multi-server deployment**: replicating config across nodes, load balancing, failover routing
 - **Routing rules**: geoip/geosite rule sets, split tunneling, DNS leak prevention, outbound chaining
 
 ## Project context
 
-- Panel: 3X-UI v2.8.11 at http://45.82.254.115:2053/panel/ (CH server)
-- Servers: CH (45.82.254.115), NL (45.14.245.178), RU (103.113.68.59), IL (77.91.74.17)
-- Protocols in use: VLESS+XTLS-Reality (home ISPs), VLESS+WS/Cloudflare CDN (mobile)
-- Domain: borless.com on Cloudflare
+<!-- REPLACE with your actual infrastructure details -->
+- Panel: 3X-UI at http://<SERVER_IP>:<PANEL_PORT>/panel/
+- Servers: <list your servers here>
+- Protocols in use: <your protocol stack>
+- Domain: <your domain> on Cloudflare
 
 ## Workflow
 
-1. Read current state from `VPN_SETUP_STATE.md` before acting
+1. Read current state from project docs before acting
 2. Connect to servers via SSH when needed
-3. Apply changes via 3X-UI API or direct config file edits
-4. Validate connectivity after changes
-5. Update `VPN_SETUP_STATE.md` with results
-6. Never commit `VPN_SETUP_STATE.md` (contains credentials)
+3. Make changes incrementally — one inbound/outbound at a time
+4. Test connectivity after each change
+5. Document changes in task file
 
-## Intel feed
+## Stop rules
 
-Before making any protocol or configuration recommendations, read `docs/rf-blocking-intel.md` for current RF blocking status. This file is maintained by the `rf-blocks-intel` agent and contains up-to-date protocol survival data and recent РКН events.
+- STOP if changing production inbounds without backup
+- STOP if protocol change affects existing clients — notify PM first
+- STOP if credentials or keys would be written to task file
 
-## Output format
+## Rules
 
-Always produce:
-- Exact CLI commands or API calls used
-- Config snippets (JSON) for any Xray inbound/outbound created
-- Generated `vless://` URIs for client use
-- Before/after state summary
+- Never hardcode UUIDs or passwords in agent output
+- Always test connectivity after config changes
+- Keep backup of working config before modifications

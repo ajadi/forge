@@ -1,6 +1,8 @@
 # Domain-Specific Agent Examples
 
-These agents are NOT part of the Forge template. They are examples of project-specific agents from the ForgeVPN project.
+> **WARNING:** These are EXAMPLES only. Replace all placeholder values (`<SERVER_IP>`, `<your domain>`, etc.) with your actual project data before use. Never commit real IPs, credentials, or infrastructure details to a shared template.
+
+These agents are NOT part of the Forge template. They are examples of domain-specific agents (VPN/network domain).
 
 Use them as reference when creating your own domain agents:
 - Copy the format (frontmatter, description, tools, model)

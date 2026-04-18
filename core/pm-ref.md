@@ -181,7 +181,7 @@ User: "I want to add X" → PM triggers BA in amend mode → tz.md updated → d
 ```
 
 ## Auto-deploy
-After all gates pass (smoke, lint, review, testing, reality-checker) → deploy automatically to production without asking user. Deploy credentials from memory/project_server_credentials.md. Verify healthy + HTTP 200 after deploy.
+After all gates pass (smoke, lint, review, testing, reality-checker) → deploy to production. Deploy credentials and server info should be stored in a project-specific memory file (never commit actual secrets to git). Verify healthy + HTTP 200 after deploy.
 
 ## Complexity levels (L1-L4)
 

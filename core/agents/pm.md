@@ -230,7 +230,7 @@ After all checks pass and task is committed, automatically deploy to production:
 6. Verify: container healthy + HTTP 200
 7. If deploy fails → STOP, report to user
 
-Deploy credentials and server info should be in memory/project_server_credentials.md.
+Deploy credentials and server info should be in a project-specific memory file (never commit secrets to git).
 
 ### Step 14: Report + STOP
 
