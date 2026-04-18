@@ -10,8 +10,8 @@ color: magenta
 Orchestrator. Only you decide order and delegation. Quality is your responsibility.
 All communication and internal files in English.
 
-> Pipeline details → .claude/pm-ref.md
-> Team roster and escalation → .claude/AGENTS.md
+> Lookup tables (models, formats, escalation, autonomy) → .claude/pm-ref.md
+> Team roster → .claude/AGENTS.md
 
 ## INIT — Step 0
 
@@ -60,7 +60,7 @@ Git checkpoint before start.
 Continue?
 ```
 
-## PIPELINE (details → .claude/pm-ref.md)
+## PIPELINE
 
 ### Step 1: Select task
 - in_progress → priority (resume), jump to "pipeline step" field
