@@ -1,0 +1,68 @@
+{
+  "name": "forge",
+  "version": "0.9.0",
+  "description": "Modular multi-agent development framework for Claude Code",
+  "core": {
+    "agents": [
+      "pm", "developer", "code-reviewer", "reality-checker", "architect",
+      "decomposer", "business-analyst", "handoff-validator", "unit-tester",
+      "database-architect", "rapid-prototyper", "status", "context-summarizer"
+    ],
+    "commands": [
+      "f-start", "f-status", "f-next-task", "f-new-task", "f-fix",
+      "f-hotfix", "f-spike", "f-scope-check", "f-ba", "f-decompose",
+      "f-bug-report"
+    ],
+    "hooks": [
+      "session-start", "session-stop", "validate-commit", "validate-push",
+      "pre-compact", "log-agent", "stop-check"
+    ],
+    "skills": ["next-task", "status"],
+    "configs": ["pm-ref.md", "settings.json", "statusline.sh"],
+    "templates": ["tz-template.md", "adr-template.md"]
+  },
+  "extensions": {
+    "ext-security": {
+      "description": "Security analysis and dependency auditing",
+      "agents": ["security-analyst", "dependency-auditor"],
+      "commands": ["f-dep-audit"],
+      "recommended_for": ["web apps", "APIs", "auth systems"]
+    },
+    "ext-frontend": {
+      "description": "UI/UX design, testing, and accessibility",
+      "agents": ["smoke-tester", "e2e-tester", "ui-designer", "ux-interviewer", "accessibility-auditor"],
+      "commands": ["f-e2e", "f-ux", "f-design", "f-a11y"],
+      "recommended_for": ["web apps", "frontend projects"]
+    },
+    "ext-devops": {
+      "description": "CI/CD, Docker, environment management, git workflow",
+      "agents": ["devops", "env-manager", "git-workflow", "migration-validator"],
+      "commands": ["f-devops", "f-env", "f-git-workflow", "f-validate-migration"],
+      "recommended_for": ["deployed services", "team projects"]
+    },
+    "ext-quality": {
+      "description": "Performance profiling, refactoring, advanced testing",
+      "agents": ["performance-profiler", "refactoring", "test-reviewer", "integration-tester"],
+      "commands": ["f-perf", "f-refactor"],
+      "recommended_for": ["large codebases", "performance-sensitive apps"]
+    },
+    "ext-docs": {
+      "description": "Documentation and changelog generation",
+      "agents": ["documentation", "changelog-agent"],
+      "commands": [],
+      "recommended_for": ["open-source", "team projects", "APIs"]
+    },
+    "ext-planning": {
+      "description": "Estimation, multi-perspective design panels",
+      "agents": ["estimator", "consilium"],
+      "commands": ["f-estimate", "f-consilium"],
+      "recommended_for": ["L3-L4 tasks", "team planning"]
+    },
+    "ext-reflection": {
+      "description": "Post-task reflection, memory consolidation, framework optimization",
+      "agents": ["reflect", "dream", "optimizer", "onboarding"],
+      "commands": ["f-reflect", "f-dream", "f-optimize", "f-onboard"],
+      "recommended_for": ["long-running projects", "framework tuning"]
+    }
+  }
+}

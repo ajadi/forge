@@ -1,0 +1,8 @@
+# Forge Preset: Solo Developer
+# 3 core agents, minimal overhead
+# Best for: solo projects, quick fixes, small apps
+
+agents: pm, developer, reality-checker
+commands: f-fix, f-hotfix, f-start, f-status
+hooks: session-start, session-stop, validate-commit
+pipeline: L1 and L2 only (L3+ requires more agents)

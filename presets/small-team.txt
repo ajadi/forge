@@ -1,0 +1,9 @@
+# Forge Preset: Small Team
+# 13 core agents, balanced coverage
+# Best for: team projects, web apps, APIs
+
+agents: core (all 13)
+commands: core (all 11)
+hooks: all core hooks
+extensions: ext-security (recommended)
+pipeline: L1 through L4
