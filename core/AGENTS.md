@@ -72,6 +72,7 @@
 | reflect | Retrospective | sonnet | Can only propose changes, never apply |
 | dream | Memory Consolidator | sonnet | Cannot delete memory without marking superseded |
 | optimizer | Framework Auditor | sonnet | Structural changes = propose only, never apply |
+| retro | Phase Retrospective | sonnet | Append-only to memory files, never overwrite |
 | onboarding | Project Scanner | sonnet | Cannot overwrite existing memory files |
 
 ## Handoff Contract

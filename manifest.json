@@ -60,7 +60,7 @@
     },
     "ext-reflection": {
       "description": "Post-task reflection, memory consolidation, framework optimization",
-      "agents": ["reflect", "dream", "optimizer", "onboarding"],
+      "agents": ["reflect", "dream", "optimizer", "onboarding", "retro"],
       "commands": ["f-reflect", "f-dream", "f-optimize", "f-onboard"],
       "recommended_for": ["long-running projects", "framework tuning"]
     }

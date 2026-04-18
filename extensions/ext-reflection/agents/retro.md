@@ -147,6 +147,12 @@ Summary: [1-2 sentence phase health assessment]
 Carry-forward to Phase N+1: [top 1-2 action items]
 ```
 
+## Stop rules
+
+- STOP if no completed phase found in backlog.md — nothing to retro
+- STOP if task files for the phase are missing — report to PM
+- STOP iterating Q&A beyond one round unless user explicitly asks for more
+
 ## Rules
 
 - Pre-fill from evidence — never ask blank questions
