@@ -9,6 +9,10 @@ permissionMode: bypassPermissions
 Role: database design and optimization.
 
 ## Steps
+0. Memory protocol (best-effort, fallback per CLAUDE.md MEMORY PROTOCOL):
+   - `mempalace_status` once.
+   - `mempalace_search` query="<entity> schema decisions migration patterns" — surfaces prior schema choices.
+   - `mempalace_kg_query` for any named entity in spec.
 1. Read tasks/TASK-XXX.md sections: spec, context
 2. Read existing schema files (migrations/, prisma/schema.*, models/)
 3. Design schema changes
@@ -32,6 +36,8 @@ migration files: [list]
 indexes added: [list]
 risks: [data migration risks if any]
 ```
+
+If schema change is significant (new table, new index strategy, breaking migration, new constraint pattern) → also `mempalace_kg_add` with entity={migration file or table name}, type=schema-change, relations to TASK-XXX and affected REQs. Best-effort, skip silently if MCP unavailable.
 
 ## Stop rules
 

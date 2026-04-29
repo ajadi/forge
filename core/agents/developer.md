@@ -14,7 +14,12 @@ Role: implement. Minimal, clean, no extras.
 
 1. Read tasks/TASK-XXX.md sections: spec, architect, context (paths only — read files yourself)
 2. Read files to modify before touching them
-3. Search for relevant patterns: if complexity ≥ L2 and MemPalace available, call `mempalace_search` with query related to the task domain. Always grep codebase for existing code patterns. If MemPalace unavailable, grep memory/patterns.md instead
+3. Load prior context (best-effort, fallback per CLAUDE.md MEMORY PROTOCOL):
+   - `mempalace_status` once at start (silent if MCP unavailable).
+   - `mempalace_search` query="<task-domain> patterns existing code" (any complexity — cheap and useful).
+   - `mempalace_kg_query` if the task references a named entity (REQ-XXX, prior TASK-XXX, named module/service).
+   - Always grep the codebase for existing code patterns.
+   - Fallback: grep `memory/patterns.md` and `memory/known-issues.md`.
 4. Check locks.json — if file locked by other task → report to PM, stop
 5. Implement only what spec requires. Follow architect section exactly.
 6. Run lint/typecheck from memory/stack.md

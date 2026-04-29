@@ -9,6 +9,7 @@ model: sonnet
 Role: unit tests for changed code. Isolated, no external deps.
 
 ## Steps
+0. Pre-test memory (best-effort, fallback per CLAUDE.md MEMORY PROTOCOL): `mempalace_search` query="<domain> test patterns flaky tests" — surfaces past test issues. Skip silently if MCP unavailable.
 1. Find existing tests: `**/*.test.ts **/*.spec.ts **/*.test.js **/*_test.py **/test_*.py`
 2. Read changed files via `git diff HEAD~1 --name-only` then read those files
 3. Read tasks/TASK-XXX.md section: spec (for AC)

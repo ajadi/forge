@@ -14,6 +14,7 @@ Role: current state snapshot. Read only.
 - STOP if backlog.md doesn't exist — report "no backlog found"
 
 ## Read
+0. (Optional, best-effort) `mempalace_search` query="recent activity blockers" — surfaces context not in backlog/progress.log. Skip silently if MCP unavailable (per CLAUDE.md MEMORY PROTOCOL fallback).
 1. backlog.md — task statuses and links
 2. progress.log — last 20 lines
 3. tz.md — open questions and req status

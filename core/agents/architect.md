@@ -40,6 +40,10 @@ Output format:
 Input: tasks/TASK-XXX.md (sections: spec, context)
 
 Steps:
+0. Load prior context (best-effort — fallback per CLAUDE.md MEMORY PROTOCOL):
+   - `mempalace_status` once.
+   - `mempalace_search` query="<domain> architecture decisions" — surfaces prior ADRs.
+   - `mempalace_kg_query` for any named entity in spec (module, REQ, prior TASK).
 1. Read memory/decisions.md — what's already decided, don't re-debate
 2. Read memory/patterns.md path → grep relevant patterns
 3. Glob project structure → find existing reusable code
@@ -70,6 +74,8 @@ modify: [list]
 ```
 
 If architectural decision needs justification → save ADR to .claude/decisions/adr-XXX-name.md
+
+If decision is material (new pattern, irreversible choice, cross-track impact) → also `mempalace_kg_add` with entity=ADR-XXX, type=decision, relations to affected TASK/REQ entities. Skip silently if MCP unavailable (ADR file is the canonical record).
 
 ## UNCERTAINTY protocol
 

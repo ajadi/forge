@@ -18,6 +18,11 @@ MVP in Phase 1: product works (minimally) after phase 1.
 
 ## Steps
 
+### 0. Memory protocol (best-effort, fallback per CLAUDE.md MEMORY PROTOCOL)
+- `mempalace_status` once.
+- `mempalace_search` query="prior phases task patterns track conflicts" — surfaces patterns from past decompositions.
+- read `memory/patterns.md` (always).
+
 ### 1. Read inputs
 - tz.md (reqs and priorities)
 - CLAUDE.md (standards)
@@ -121,6 +126,8 @@ Parallel tracks in phase 1:
 Critical path: TASK-001 → TASK-002 → TASK-007
 Cycles: none ✅
 ```
+
+After summary → `mempalace_diary_write` with payload: phases planned, total tasks, MVP definition, critical path, parallel tracks, deferred tasks. Best-effort, skip silently if MCP unavailable.
 
 ## Stop rules
 

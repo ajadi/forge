@@ -20,19 +20,16 @@ Reset blocker hook:
 grep -c '⏳ open' tz.md 2>/dev/null | tr -d '\r' > .claude/.oq-state || echo 0 > .claude/.oq-state
 ```
 
-Load memory context (if MemPalace available):
-```bash
-# Wake-up: call mempalace_status via MCP if available
-# If MCP unavailable: skip palace, use memory/*.md files as fallback
-# Search for project context: mempalace_search with query="project status current phase"
-```
+Load memory context (best-effort — fallback rules in CLAUDE.md MEMORY PROTOCOL):
+1. `mempalace_status` (silent if MCP unavailable → use memory/*.md fallback for the rest of the session).
+2. `mempalace_search` query="active task project state recent decisions" — surfaces context for the task you'll select.
+3. If picking up a known entity (TASK-XXX, REQ-XXX, named module) → `mempalace_kg_query` for that entity to recall prior decisions.
 
 Load context (reference-passing only):
 ```
 Required: CLAUDE.md · backlog.md · tz.md (active reqs only)
 Reference (read sections as needed, not full file): .claude/pm-ref.md
 Skip: .claude/AGENTS.md (read only if routing to unknown agent)
-Optional: MemPalace search for project context
 ```
 
 ## Step 0.5: Route
@@ -219,6 +216,10 @@ Update backlog.md: `status: done`.
 Update tz.md: mark REQ as `✅ done in TASK-XXX`.
 Archive: `mv tasks/TASK-XXX.md tasks/archive/TASK-XXX.md`
 Update memory (only if genuinely new, mark old as `~~superseded~~`).
+
+Write task diary (best-effort, fallback to `memory/diary.md` if MCP unavailable):
+- `mempalace_diary_write` with payload: task ID, name, commit hashes, files shipped, AC coverage, key decisions, OQ raised (if any), test count.
+- If a material decision was made (architectural choice, irreversible config, new dependency) → also `mempalace_kg_add` for the entity + relations to TASK-XXX and affected REQs.
 
 Phase complete (all phase tasks done):
 ```bash

@@ -36,7 +36,24 @@ PARALLEL COORDINATION: orchestrator owns conflict resolution. Before launching p
 
 AUTONOMOUS EXECUTION: once the user gives a task, execute it to completion without asking for confirmation at intermediate steps. Only stop if genuinely blocked (BLOCKED: OQ-XXX).
 
-MEMORY PROTOCOL: All agents use MemPalace (MCP server) for memory operations. On session start, call `mempalace_status` to load protocol. Before stating facts about the project, search palace via `mempalace_search`. After sessions, write diary via `mempalace_diary_write`. Palace is the primary memory backend. If MemPalace is unavailable, agents fall back to memory/*.md files.
+MEMORY PROTOCOL — agents use MemPalace (MCP) as primary memory; if MCP unavailable, silently fall back to `memory/*.md` files. Palace calls are best-effort: do NOT block on errors.
+
+Required calls per role (skip silently if the tool isn't in your toolset OR returns an MCP-not-connected error):
+
+1. **Wake-up (all agents)** — call `mempalace_status` once. On error → fallback mode for the rest of the session.
+2. **Before stating past-project facts** (REQ wording, prior decision, why X was deferred, past task outcome): call `mempalace_search` (4–8 word focused query) OR `mempalace_kg_query` (if you have an entity name like `TASK-018`, `ETH130PL`, `REQ-010`). Wrong guess > slow lookup.
+3. **End of work — diary write**:
+   - PM at task close and phase end → `mempalace_diary_write` (task ID, commit hashes, key decisions, AC coverage, OQ raised).
+   - business-analyst, decomposer, rapid-prototyper, context-summarizer at end of their session → same with role-relevant payload.
+   - Other agents (developer, code-reviewer, unit-tester, etc.) → no diary write; PM owns the task-level diary.
+4. **New material entity** (architect ADR, BA new REQ, database-architect schema change, rapid-prototyper REFUTED hypothesis): `mempalace_kg_add` with entity name, type, and relations to affected tasks/REQs.
+5. **Fact change**: `mempalace_kg_invalidate` (old) + `mempalace_kg_add` (new).
+6. **Before adding a new pattern/known-issue to memory**: `mempalace_check_duplicate` to avoid noise.
+
+Fallback rules (MCP unavailable):
+- Read `memory/decisions.md`, `memory/patterns.md`, `memory/known-issues.md`, `memory/stack.md` directly with `Read`/`Grep`.
+- Write new entries with `Edit`/`Write` to those same files.
+- Do NOT retry MCP, do NOT spend turns trying to reconnect. Surface "MCP unreachable" once at handoff, not as STOP.
 
 DEFINITION OF DONE: a task is complete only when: (1) code committed to git, (2) tests pass (L3+ with new logic), (3) result reported to user.
 

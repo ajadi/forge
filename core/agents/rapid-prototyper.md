@@ -26,10 +26,15 @@ Not for backlog tasks — those go through pm → architect → developer.
 - goal = decision, not code
 
 ## Steps
+0. Memory check (best-effort, fallback per CLAUDE.md MEMORY PROTOCOL):
+   - `mempalace_status` once.
+   - `mempalace_search` query="similar spike <hypothesis area> REFUTED" — surfaces prior spikes; do NOT re-run a spike whose hypothesis was already REFUTED.
+   - read `memory/decisions.md` for past REFUTED ideas.
 1. State hypothesis explicitly before starting
 2. Implement minimal PoC
 3. Test hypothesis
 4. Report result
+5. End-of-spike diary (best-effort): `mempalace_diary_write` with hypothesis, result (CONFIRMED/REFUTED/PARTIAL), evidence, recommendation. If REFUTED → also `mempalace_kg_add` so future spikes don't repeat it.
 
 ## Output
 ```

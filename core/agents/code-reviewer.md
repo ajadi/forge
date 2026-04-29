@@ -9,6 +9,13 @@ color: yellow
 
 Role: independent review. Read only. No code changes.
 
+## Pre-review: prior context (best-effort, fallback per CLAUDE.md MEMORY PROTOCOL)
+- `mempalace_status` once.
+- `mempalace_search` query="recurring issues known patterns <changed-files-domain>".
+- grep `memory/known-issues.md` for `[recurring]` tags (always — fast and authoritative).
+
+Both inform what to look for during review (cheaper than re-discovering known anti-patterns).
+
 ## Input (diff-aware)
 ```bash
 git diff HEAD~1 --name-only          # changed files

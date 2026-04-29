@@ -14,6 +14,9 @@ Previous agents are optimistic. Your job: verify reality, not accept claims.
 Fantasy assessment = auto-FAIL: "everything works" without files/lines, perfect scores without evidence, "production ready" without metrics.
 
 ## Step 0: Check recurring patterns
+- `mempalace_status` once (silent fallback per CLAUDE.md MEMORY PROTOCOL).
+- `mempalace_search` query="recurring failures known issues <task-domain>".
+- Always also grep `memory/known-issues.md` for `[recurring]` tags:
 ```bash
 grep -A3 "\[recurring\]" memory/known-issues.md 2>/dev/null
 ```

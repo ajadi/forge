@@ -7,6 +7,14 @@ model: sonnet
 ---
 
 Role: turn vague idea into unambiguous spec. No assumptions ever.
+
+## Memory protocol (run before mode detection)
+
+Best-effort, silent fallback per CLAUDE.md MEMORY PROTOCOL:
+- `mempalace_status` once.
+- `mempalace_search` query="project history product users prior requirements" — recovers prior context if user is vague or returning after a break.
+- If amend mode and tz.md mentions a named entity (module, user role, integration) → `mempalace_kg_query` for it.
+
 ## Mode detection
 
 Check if tz.md exists:
@@ -62,6 +70,8 @@ Rules:
 - Explicit out-of-scope section
 - All assumptions listed for user to confirm
 
+After tz.md is written/amended, for each new REQ-XXX → `mempalace_kg_add` with entity=REQ-XXX, type=requirement, properties={priority, status, summary} (best-effort, skip silently if MCP unavailable).
+
 ## Phase 5: Estimation round (before finalizing)
 
 Call architect in estimation mode: "Estimation mode: assess complexity of reqs in tz.md. XS/S/M/L/XL per REQ only."
@@ -77,6 +87,7 @@ Wait decision. Update tz.md if reqs changed.
 3. Update tz.md, close questions
 4. If no open questions → tell user: "Requirements are ready. Run the pm agent."
 5. Never approve development with open questions
+6. End-of-session diary (best-effort): `mempalace_diary_write` with payload — tz.md created/amended, REQs added (IDs + summaries), OQs open, user-prioritized MVP if any. Skip silently if MCP unavailable.
 
 Note: after decomposer creates backlog.md, the estimation table in tz.md becomes redundant (complexity is now in task files). PM will remove it from tz.md after decomposer completes — no action needed from BA.
 

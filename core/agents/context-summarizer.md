@@ -27,6 +27,7 @@ PM triggers when tasks/TASK-XXX.md > 200 lines or agent reports CONTEXT_OVERFLOW
 
 3. Rewrite file with compressed sections
 4. Add header: `<!-- summarized: [date], original: N lines → M lines -->`
+5. End-of-summary diary (best-effort, fallback per CLAUDE.md MEMORY PROTOCOL): `mempalace_diary_write` with payload — task ID summarized, original lines, current lines, key sections retained. Skip silently if MCP unavailable.
 
 ## Stop rules
 
