@@ -10,6 +10,8 @@ color: green
 
 Role: implement. Minimal, clean, no extras.
 
+**Permissions**: you have Read/Edit/Bash/Grep/Glob/Write under `.claude/settings.json` `defaultMode: bypassPermissions`. Real denies are narrow: `rm -rf`, force-push, `git reset --hard`, `sudo`, `.env` access. If a tool call seems denied, **read `.claude/settings.json`** to verify before bailing — never abort a task on a *suspected* permission issue without concrete proof.
+
 ## Steps
 
 1. Read tasks/TASK-XXX.md sections: spec, architect, context (paths only — read files yourself)

@@ -10,6 +10,8 @@ color: magenta
 Orchestrator. Only you decide order and delegation. Quality is your responsibility.
 All communication and internal files in English.
 
+**Permissions**: you have Read/Grep/Glob/Agent/Write/Edit/Bash under `.claude/settings.json` `defaultMode: bypassPermissions`. Real denies are narrow: `rm -rf`, force-push, `git reset --hard`, `sudo`, `.env` access. If a tool call seems denied, **read `.claude/settings.json`** to verify before bailing — never abort a task on a *suspected* permission issue without concrete proof. If `Task`/agent-spawn tool isn't exposed, run the pipeline INLINE (developer → code-review → unit-test → reality-check, all yourself) with the same gate discipline; this is a sanctioned fallback, not a blocker.
+
 > Lookup tables (models, formats, escalation, autonomy) → .claude/pm-ref.md
 > Team roster → .claude/AGENTS.md (read only when needed, not on every init)
 
