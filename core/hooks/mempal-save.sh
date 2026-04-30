@@ -19,9 +19,16 @@ else
   exit 0
 fi
 
+# Convert path for Windows-native Python (Git Bash uses /c/... but Windows Python needs C:/...)
+if command -v cygpath >/dev/null 2>&1; then
+  PY_CHECKPOINT_FILE=$(cygpath -m "$CHECKPOINT_FILE")
+else
+  PY_CHECKPOINT_FILE="$CHECKPOINT_FILE"
+fi
+
 # Count exchanges since last save
 if [ -f "$CHECKPOINT_FILE" ]; then
-  last_msgs=$($PYTHON -c "import json; print(json.load(open('$CHECKPOINT_FILE')).get('msgs', 0))" 2>/dev/null || echo 0)
+  last_msgs=$($PYTHON -c "import json; print(json.load(open(r'$PY_CHECKPOINT_FILE')).get('msgs', 0))" 2>/dev/null || echo 0)
 else
   last_msgs=0
 fi
