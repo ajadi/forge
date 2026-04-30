@@ -11,8 +11,8 @@ Forge turns Claude Code into a full dev team: PM orchestrates, agents implement,
 git clone https://github.com/ajadi/forge.git
 
 # Install into your project (choose a preset)
-bash forge/install.sh /path/to/your/project --preset solo        # 3 agents
-bash forge/install.sh /path/to/your/project --preset small-team   # 13 agents (core only)
+bash forge/install.sh /path/to/your/project --preset solo         # 13 agents (core)
+bash forge/install.sh /path/to/your/project --preset small-team   # core + ext-security
 bash forge/install.sh /path/to/your/project --preset full         # 37 agents
 
 # Or pick specific extensions
@@ -21,6 +21,48 @@ bash forge/install.sh /path/to/your/project --ext security,frontend
 # Then open your project in Claude Code and run:
 # /f-start
 ```
+
+### Global install (optional)
+
+Install Forge once into `~/.claude/` so it's available in any project:
+
+```bash
+bash forge/install-global.sh
+```
+
+After that, in a fresh directory open Claude Code and run `/setup-project` —
+the skill will run `install.sh` for the current folder, no manual download.
+
+### Install flags
+
+| Flag | What |
+|------|------|
+| `--preset solo|small-team|full` | Pick a bundle |
+| `--ext name1,name2` | Add specific extensions |
+| `--name "..."` | Project name written into `manifest.md` |
+| `--rollback` | Restore the last backup (`.claude/backup-TIMESTAMP/`) |
+| `--apply-proposal` | Re-run merge after manually resolving `CLAUDE.md` conflicts |
+| `--list` | List available presets and extensions |
+
+The installer creates a backup of `CLAUDE.md`, `settings.json`, `manifest.md`,
+and `.gitignore` before any change. If your `CLAUDE.md` and the framework
+template have a hard conflict, the install pauses and writes
+`.claude/CLAUDE.md.merge-proposal.md` instead of overwriting your file.
+
+### Repo access modes
+
+After install, `manifest.md` holds `repo_access` (default `private-solo`).
+For shared/public repos, switch BEFORE the first commit that contains
+framework state:
+
+```bash
+scripts/switch-repo-access.sh public --commit
+scripts/switch-repo-access.sh private-shared --commit
+```
+
+The script untracks `.claude/`, `CLAUDE.md`, `memory/`, `tasks/` from the git
+index and toggles the `framework-public-ignore` block in `.gitignore`. See
+`.claude/rules/repo-access.md` for the full model.
 
 ### Prerequisites
 
