@@ -281,4 +281,4 @@ recommendation: [specific fix, not generic]
 
 **Solution:** `install.sh` now triggers the ONNX download immediately after `pip install mempalace`. `core/settings.json` adds `PYTHONIOENCODING=utf-8` and `PYTHONUTF8=1` to the MemPalace MCP server env. `CLAUDE.md` clarifies that empty-palace state on wake-up is not an error and that agents should NOT run interactive `mempalace init`.
 
-**Source**: encountered during SFTT bootstrap, 2026-04-30. (Originally fixed in commit 75193c9 on branch `feat/agent-memory-protocol-explicit`; re-applied to v2.1 main on `fix/mempalace-windows-bootstrap-v2`.)
+**Source**: encountered during a Windows 11 bootstrap, 2026-04-30. (Originally fixed in commit 75193c9 on branch `feat/agent-memory-protocol-explicit`; re-applied to v2.1 main on `fix/mempalace-windows-bootstrap-v2`.)
