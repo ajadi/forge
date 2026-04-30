@@ -123,7 +123,7 @@ MemPalace (MCP server) ── semantic memory for all agents
 
 ## Memory System (MemPalace)
 
-Forge v2.0 uses [MemPalace](https://github.com/MemPalace/mempalace) as its built-in memory backend. Every agent can:
+Forge uses [MemPalace](https://github.com/MemPalace/mempalace) as its built-in memory backend. Every agent can:
 
 | Operation | MCP Tool | What it does |
 |-----------|----------|-------------|
@@ -136,10 +136,12 @@ Forge v2.0 uses [MemPalace](https://github.com/MemPalace/mempalace) as its built
 
 ### Memory Protocol
 
-1. **On wake-up**: Call `mempalace_status` (loads protocol + palace stats)
+1. **On wake-up**: Call `mempalace_status` (loads protocol + palace stats). Empty palace (`wings: {}`) is not an error — first task seeds it.
 2. **Before facts**: Search palace first via `mempalace_search` — never guess
 3. **After session**: Write diary via `mempalace_diary_write`
 4. **When facts change**: Invalidate old + add new via knowledge graph
+
+> Don't run interactive `mempalace init` from inside an agent — it produces low-quality entity suggestions for typical Forge projects. PM seeds the wing on first task close instead.
 
 ### How Agents Use Memory
 
@@ -174,10 +176,12 @@ forge/
     agents/                 # 13 core agents
     commands/               # 11 slash commands (/f-fix, /f-start, etc.)
     hooks/                  # Session lifecycle, git validation, metrics, MemPalace auto-save
-    skills/                 # next-task, status
-    templates/              # tz-template (requirements), adr-template (decisions)
+    rules/                  # Modular doctrine: repo-access, commit-policy, production-safety
+    scripts/                # switch-repo-access, framework-state-mode, lib/merge_claude_md.py
+    skills/                 # next-task, status, setup-project
+    templates/              # tz-template, adr-template, manifest.md.tmpl, gitignore.tmpl
     pm-ref.md               # Pipeline reference
-    settings.json           # Base permissions, hooks, MCP server config
+    settings.json           # Base permissions, hooks, MCP server config (UTF-8 env)
 
   extensions/               # Install per project need
     ext-security/           # security-analyst, dependency-auditor
@@ -274,18 +278,27 @@ bash install.sh /my/project --preset full
 #   .claude/agents/        <- 37 agent definitions
 #   .claude/commands/      <- 28 slash commands
 #   .claude/hooks/         <- 11 lifecycle hooks (including MemPalace auto-save)
-#   .claude/skills/        <- 2 custom skills
+#   .claude/rules/         <- 3 modular doctrine files
+#   .claude/skills/        <- 3 custom skills (next-task, status, setup-project)
 #   .claude/templates/     <- requirement + ADR templates
 #   .claude/AGENTS.md      <- team roster
 #   .claude/pm-ref.md      <- pipeline reference
 #   .claude/settings.json  <- permissions, hooks, MCP server config
 #   .claude/statusline.sh  <- status bar script
-#   CLAUDE.md              <- project rules (only if not exists)
+#   CLAUDE.md              <- project doctrine (additive merge if exists)
+#   manifest.md            <- project metadata + repo_access mode
+#   scripts/               <- switch-repo-access.sh, framework-state-mode.sh, lib/
 #   tasks/                 <- task tracking
-#   + MemPalace            <- pip install + MCP server registration
+#   memory/                <- long-term notes (palace fallback)
+#   + MemPalace            <- pip install + MCP server registration + ONNX pre-warm
 ```
 
-The installer **never overwrites** existing `CLAUDE.md` — your project rules are safe.
+The installer never silently overwrites existing files: every run snapshots
+`CLAUDE.md`, `settings.json`, `manifest.md`, and `.gitignore` to
+`.claude/backup-TIMESTAMP/`. `CLAUDE.md` is merged additively via
+`scripts/lib/merge_claude_md.py`; on a hard conflict the install pauses and
+writes `.claude/CLAUDE.md.merge-proposal.md` — nothing is overwritten until
+you resolve. Use `--rollback` to restore the last backup.
 
 ## Adding Domain-Specific Agents
 
@@ -314,6 +327,37 @@ Role: [what this agent does]
 
 Place in `.claude/agents/` and add a matching command in `.claude/commands/` if needed.
 
+## What's New in v2.1
+
+**Install UX**
+
+- **Backup + rollback** — every install snapshots `CLAUDE.md`, `settings.json`, `manifest.md`, `.gitignore` to `.claude/backup-TIMESTAMP/`. `bash install.sh --rollback` restores the latest snapshot in one command.
+- **Additive `CLAUDE.md` merge** — vendored `merge_claude_md.py` walks H2 sections, merges lists/tables, preserves user-custom sections. Hard conflict produces `.claude/CLAUDE.md.merge-proposal.md` and pauses the install — your file is never overwritten silently. Resolve and rerun with `--apply-proposal`.
+- **`manifest.md`** — single source of truth for `project_name`, `repo_access`, framework version. Created on first install.
+
+**Repo access model**
+
+- **`private-solo` / `private-shared` / `public`** — controls whether framework state (`.claude/`, `CLAUDE.md`, `memory/`, `tasks/`) is committed to git or kept local. Default `private-solo` matches the v2.0 behaviour; switch with `scripts/switch-repo-access.sh <mode> --commit`.
+- **Switch script** untracks framework files from the git index, toggles the `framework-public-ignore` block in `.gitignore`, and stops if upstream history already contains framework files (asks for a history rewrite or fresh branch).
+
+**Modular doctrine**
+
+- `.claude/rules/` — operational policies split out of monolithic `CLAUDE.md`:
+  - `repo-access.md` — full mode model
+  - `commit-policy.md` — what to commit per mode, what never to commit
+  - `production-safety.md` — production deploy is the only hard stop
+
+**Global install**
+
+- **`install-global.sh`** copies core into `~/.claude/` additively (won't clobber your custom agents/skills) and stashes a checkout pointer at `~/.claude/.forge-checkout`.
+- **`/setup-project` skill** — in any fresh directory, open Claude Code and run `/setup-project`; the skill reads the pointer and runs `install.sh` for the current folder.
+
+**Windows polish**
+
+- `core/settings.json` ships `PYTHONIOENCODING=utf-8` + `PYTHONUTF8=1` in the MempPalace MCP server env (prevents cp1252 crashes on emoji/arrows in stored content).
+- `install.sh` pre-warms the ChromaDB ONNX embedding model (~79 MB) immediately after `pip install mempalace`, so the first `add_drawer` call doesn't time out.
+- `CLAUDE.md` clarifies that an empty palace on wake-up (`wings: {}`) is not an error and that agents should NOT run interactive `mempalace init`.
+
 ## What's New in v2.0
 
 - **MemPalace integration** — semantic memory backend with 29 MCP tools, replacing flat `memory/*.md` files
@@ -322,15 +366,29 @@ Place in `.claude/agents/` and add a matching command in `.claude/commands/` if 
 - **Agent diaries** — per-agent isolated memory with timestamped entries
 - **Graceful degradation** — everything works without MemPalace (falls back to flat files)
 - **Windows support** — hooks detect `python` vs `python3`, installer auto-installs Python via winget
-
-**Windows users**: the bundled `mcpServers.mempalace` config sets `PYTHONIOENCODING=utf-8` and `PYTHONUTF8=1` to prevent cp1252 encoding crashes. The first install also pre-downloads the embedding model (~79 MB) so MCP calls don't time out on first use.
 - **Token optimizations** — conditional palace search (L2+ only), AGENTS.md lazy-loaded, complexity table deduplicated
 - **New hooks** — `detect-gaps.sh` (missing files warning), `check-blockers.sh` (OQ detection after agent runs)
 
-### Upgrading from v1.0
+## Upgrading
+
+### From v2.0 → v2.1
 
 ```bash
-# Re-run the installer — it won't overwrite your CLAUDE.md
+# Re-run the installer — your CLAUDE.md is merged additively, not overwritten.
+# Backup is created automatically at .claude/backup-TIMESTAMP/.
+bash forge/install.sh /path/to/your/project --preset full
+
+# If hard conflicts in CLAUDE.md, resolve them and run:
+bash forge/install.sh /path/to/your/project --apply-proposal
+
+# Decide repo access mode (default private-solo). Shared/public repos:
+scripts/switch-repo-access.sh public --commit
+```
+
+### From v1.x → v2.x
+
+```bash
+# Re-run the installer
 bash forge/install.sh /path/to/your/project --preset full
 
 # Install MemPalace
@@ -348,7 +406,12 @@ claude mcp add mempalace -- python -m mempalace.mcp_server
 | Hooks error on Windows | Ensure Git Bash is the default shell. Hooks use `#!/bin/bash`. |
 | `python3` not found | On Windows, Python installs as `python`, not `python3`. Forge handles this automatically. |
 | Agent says "MemPalace unavailable" | Check MCP server: `claude mcp list`. If missing, re-register. Agents will fall back to flat files. |
-| install.sh exits with error | Run with `bash -x install.sh ...` for debug output. Common cause: empty extension directories. |
+| Empty palace on first run (`wings: {}`) | Not an error. Continue normally — palace seeds itself on first task close. Don't run interactive `mempalace init`. |
+| First `mempalace_add_drawer` times out | Pre-warm step in `install.sh` failed. Run it manually: `python -c "from chromadb.utils.embedding_functions.onnx_mini_lm_l6_v2 import ONNXMiniLM_L6_V2; ONNXMiniLM_L6_V2()._download_model_if_not_exists()"` |
+| Stored content has cp1252 mojibake | `core/settings.json` env block missing `PYTHONIOENCODING=utf-8` + `PYTHONUTF8=1`. v2.1 ships these by default; for upgrades from v2.0 add them manually under `mcpServers.mempalace.env`. |
+| install.sh exits with code 2 | Hard conflict in `CLAUDE.md`. Read `.claude/CLAUDE.md.merge-proposal.md`, resolve, then `bash install.sh --apply-proposal`. Or `bash install.sh --rollback` to abort. |
+| install.sh exits with other error | Run with `bash -x install.sh ...` for debug output. Common cause: empty extension directories. |
+| Framework files leaked to public branch | `scripts/switch-repo-access.sh` blocks the switch when upstream history already contains framework files. Use `git filter-repo` to rewrite, or cut a fresh branch from before the framework commits. |
 | Dream agent triggers on every session | Increase threshold: edit `session-start.sh` line with `5+` sessions to a higher number. |
 
 ## Credits
