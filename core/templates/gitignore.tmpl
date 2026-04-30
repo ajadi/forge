@@ -1,0 +1,43 @@
+# --- common ---
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+credentials.json
+secrets/
+*secret*
+*.db
+*.sqlite
+*.sqlite3
+node_modules/
+__pycache__/
+.venv/
+venv/
+dist/
+build/
+*.egg-info/
+*.log
+coverage/
+.coverage
+.pytest_cache/
+.DS_Store
+Thumbs.db
+
+# --- forge: always local, never commit ---
+.claude/settings.local.json
+.claude/locks.json
+.claude/metrics.log
+.claude/logs/
+.claude/backup-*/
+.claude/CLAUDE.md.merge-proposal.md
+CLAUDE.local.md
+
+# >>> framework-public-ignore
+# Toggled by scripts/switch-repo-access.sh — do not edit by hand
+# .claude/
+# CLAUDE.md
+# memory/
+# tasks/
+# <<< framework-public-ignore

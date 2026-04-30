@@ -1,10 +1,10 @@
-# Multi-Agent Dev Rules (Forge v2.0)
+# Multi-Agent Dev Rules (Forge v2.1)
 
 ## Core rules (all agents)
 
 ORCHESTRATOR NEVER IMPLEMENTS: Claude (orchestrator) must NEVER edit files, delete files, run code, or implement anything directly. ALL implementation goes through PM. No exceptions.
 
-PIPELINE BY COMPLEXITY: every task goes through a pipeline matched to its complexity level (L1-L4). PM assesses complexity BEFORE starting. See pm-ref.md for the full complexity table and pipeline routing. If unsure — go one level up.
+PIPELINE BY COMPLEXITY: every task goes through a pipeline matched to its complexity level (L1-L4). PM assesses complexity BEFORE starting. See `.claude/pm-ref.md` for the full complexity table and pipeline routing. If unsure — go one level up.
 
 <important if="you encounter unclear business logic or missing requirements">
 AMBIGUITY: if business logic unclear → add OQ-XXX to tz.md → return PM: `BLOCKED: OQ-XXX [blocker: task|track|project]`. Never assume. Never continue.
@@ -39,5 +39,21 @@ AUTONOMOUS EXECUTION: once the user gives a task, execute it to completion witho
 MEMORY PROTOCOL: All agents use MemPalace (MCP server) for memory operations. On session start, call `mempalace_status` to load protocol. Before stating facts about the project, search palace via `mempalace_search`. After sessions, write diary via `mempalace_diary_write`. Palace is the primary memory backend. If MemPalace is unavailable, agents fall back to memory/*.md files.
 
 DEFINITION OF DONE: a task is complete only when: (1) code committed to git, (2) tests pass (L3+ with new logic), (3) result reported to user.
+
+## Modular rules
+
+Operational policies live in `.claude/rules/` and load lazily by topic:
+
+- `.claude/rules/repo-access.md` — `private-solo` / `private-shared` / `public` modes; controls whether framework state is committed.
+- `.claude/rules/commit-policy.md` — what to commit per mode, what never to commit, pre-push checks.
+- `.claude/rules/production-safety.md` — production deploy is the only hard stop that requires user confirmation.
+
+Read the relevant rule before acting in its domain. The list above is the canonical index.
+
+## Project metadata
+
+- `manifest.md` (project root) — `project_name`, `repo_access`, framework version. Source of truth for repo-access mode.
+- `scripts/switch-repo-access.sh` — safe transition between modes. Don't edit `.gitignore` or untrack framework files by hand.
+- `scripts/framework-state-mode.sh` — read-only helper used by hooks.
 
 > **First session?** No tz.md and no tasks — run `/f-start` for guided onboarding.
