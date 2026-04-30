@@ -270,3 +270,15 @@ recommendation: [specific fix, not generic]
 | 12 | Presets solo/small/full | DONE | presets/, install.sh --preset |
 | 13 | Self-diagnosis | DONE | reality-checker.md (diagnosis section) |
 | 14 | Escalation matrix | DONE | pm-ref.md, AGENTS.md |
+
+---
+
+## P2 — Windows / first-install polish
+
+### Pre-warm ONNX model + Windows UTF-8 env
+
+**Problem:** Fresh installs on Windows hit two papercuts: (1) first `mempalace_add_drawer` MCP call times out while ChromaDB lazily downloads the 79 MB ONNX embedding model, and (2) the `mempalace` CLI crashes on cp1252 consoles when emitting Unicode arrows in help text. The MCP server itself doesn't crash but stores content with cp1252 mojibake in stored drawers.
+
+**Solution:** `install.sh` now triggers the ONNX download immediately after `pip install mempalace`. `core/settings.json` adds `PYTHONIOENCODING=utf-8` and `PYTHONUTF8=1` to the MemPalace MCP server env. `CLAUDE.md` clarifies that empty-palace state on wake-up is not an error and that agents should NOT run interactive `mempalace init`.
+
+**Source**: encountered during SFTT bootstrap, 2026-04-30. (Originally fixed in commit 75193c9 on branch `feat/agent-memory-protocol-explicit`; re-applied to v2.1 main on `fix/mempalace-windows-bootstrap-v2`.)

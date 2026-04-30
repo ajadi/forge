@@ -211,6 +211,18 @@ if [ -n "$PYTHON" ]; then
       echo "  WARN: pip install mempalace failed — install manually"
     }
   fi
+  # Pre-warm ChromaDB ONNX embedding model (~79MB) so first MCP add_drawer
+  # doesn't time out while Chroma lazily downloads it.
+  echo "[mempalace] Pre-warming embedding model (~79MB, one-time download)..."
+  PYTHONIOENCODING=utf-8 $PYTHON -c "
+try:
+    from chromadb.utils.embedding_functions.onnx_mini_lm_l6_v2 import ONNXMiniLM_L6_V2
+    ONNXMiniLM_L6_V2()._download_model_if_not_exists()
+    print('[mempalace] Embedding model ready.')
+except Exception as e:
+    print(f'[mempalace] Warmup skipped ({e}); will download on first use.')
+" 2>&1 | tail -20 || true
+
   if command -v claude >/dev/null 2>&1; then
     if claude mcp list 2>/dev/null | grep -q mempalace; then
       echo "  MCP server already registered"

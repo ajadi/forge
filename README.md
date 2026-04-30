@@ -322,6 +322,8 @@ Place in `.claude/agents/` and add a matching command in `.claude/commands/` if 
 - **Agent diaries** — per-agent isolated memory with timestamped entries
 - **Graceful degradation** — everything works without MemPalace (falls back to flat files)
 - **Windows support** — hooks detect `python` vs `python3`, installer auto-installs Python via winget
+
+**Windows users**: the bundled `mcpServers.mempalace` config sets `PYTHONIOENCODING=utf-8` and `PYTHONUTF8=1` to prevent cp1252 encoding crashes. The first install also pre-downloads the embedding model (~79 MB) so MCP calls don't time out on first use.
 - **Token optimizations** — conditional palace search (L2+ only), AGENTS.md lazy-loaded, complexity table deduplicated
 - **New hooks** — `detect-gaps.sh` (missing files warning), `check-blockers.sh` (OQ detection after agent runs)
 

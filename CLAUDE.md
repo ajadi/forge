@@ -38,6 +38,8 @@ AUTONOMOUS EXECUTION: once the user gives a task, execute it to completion witho
 
 MEMORY PROTOCOL: All agents use MemPalace (MCP server) for memory operations. On session start, call `mempalace_status` to load protocol. Before stating facts about the project, search palace via `mempalace_search`. After sessions, write diary via `mempalace_diary_write`. Palace is the primary memory backend. If MemPalace is unavailable, agents fall back to memory/*.md files.
 
+- **Cold-start (palace empty / `wings: {}`)**: not an error. Continue normally; PM may seed the wing on first task close via `mempalace_add_drawer`. Do NOT run `mempalace init` from inside the agent — it's interactive and produces low-quality entity suggestions for typical Forge projects.
+
 DEFINITION OF DONE: a task is complete only when: (1) code committed to git, (2) tests pass (L3+ with new logic), (3) result reported to user.
 
 ## Modular rules
