@@ -16,7 +16,7 @@ Role: verify build + pages render without errors. No scenario testing.
    If missing: `npm install --save-dev @playwright/test && npx playwright install chromium --with-deps`
 
 3. Find routes:
-   `Glob: src/app/**/page.tsx` → derive URLs (skip dynamic routes with [param])
+   `Glob: src/app/**/page.tsx` → derive URLs (skip dynamic routes with [param]) (max 30 pages — if more, test first 30 only)
 
 4. Build:
 ```bash

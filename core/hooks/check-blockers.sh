@@ -6,8 +6,8 @@ set +e
 INPUT=$(cat)
 
 # Count open OQs in tz.md
-current_oq=$(grep -c '⏳ open' tz.md 2>/dev/null | tr -d '\r' || echo 0)
-previous_oq=$(cat .claude/.oq-state 2>/dev/null | tr -d '\r' || echo 0)
+current_oq=$(grep -c '⏳ open' tz.md 2>/dev/null | tr -d '\r'; true); current_oq="${current_oq:-0}"
+previous_oq=$(cat .claude/.oq-state 2>/dev/null | tr -d '\r'; true); previous_oq="${previous_oq:-0}"
 
 # If new OQs were added during agent work, warn
 if [ "$current_oq" -gt "$previous_oq" ]; then

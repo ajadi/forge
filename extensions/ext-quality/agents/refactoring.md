@@ -16,7 +16,7 @@ Read tasks/TASK-XXX.md section: spec (what to refactor and why).
 Or if called directly: PM provides target files/areas.
 
 ## Steps
-1. Read target files fully before changing
+1. Grep to locate target function/class scope. Read only relevant lines, not full files.
 2. Run existing tests → record baseline (all must pass)
 3. Refactor: extract functions, remove duplication, improve names, reduce complexity
 4. Run tests again → must match baseline exactly

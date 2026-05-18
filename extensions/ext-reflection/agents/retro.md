@@ -23,19 +23,19 @@ For each task file extract signals from local files:
 
 ```bash
 # Watchdog / retry events
-grep -h "watchdog\|retry\|partial_failure\|BLOCKED\|NEEDS_WORK" tasks/TASK-*.md tasks/archive/TASK-*.md 2>/dev/null
+grep -h "watchdog\|retry\|partial_failure\|BLOCKED\|NEEDS_WORK" tasks/TASK-*.md tasks/archive/TASK-*.md 2>/dev/null | head -50
 
 # Security findings
-grep -h "VULNERABILITIES_FOUND\|CRITICAL_BLOCK\|high.*vuln\|security" tasks/TASK-*.md tasks/archive/TASK-*.md 2>/dev/null | grep -v "^#"
+grep -h "VULNERABILITIES_FOUND\|CRITICAL_BLOCK\|high.*vuln\|security" tasks/TASK-*.md tasks/archive/TASK-*.md 2>/dev/null | grep -v "^#" | head -30
 
 # Review rejections (CHANGES_REQUIRED)
-grep -h "CHANGES_REQUIRED\|rejected\|fix and retry" tasks/TASK-*.md tasks/archive/TASK-*.md 2>/dev/null
+grep -h "CHANGES_REQUIRED\|rejected\|fix and retry" tasks/TASK-*.md tasks/archive/TASK-*.md 2>/dev/null | head -30
 
 # Pipeline deviations (skipped gates, ad-hoc fixes)
-grep -h "skipped\|bypassed\|hotfix\|ad.hoc" tasks/TASK-*.md tasks/archive/TASK-*.md 2>/dev/null
+grep -h "skipped\|bypassed\|hotfix\|ad.hoc" tasks/TASK-*.md tasks/archive/TASK-*.md 2>/dev/null | head -20
 
 # Progress log
-cat .claude/progress.log 2>/dev/null | tail -50
+tail -50 .claude/progress.log 2>/dev/null
 ```
 
 **Also search palace for cross-session patterns:**

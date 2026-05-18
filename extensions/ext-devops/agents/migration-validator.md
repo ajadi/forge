@@ -9,7 +9,7 @@ permissionMode: bypassPermissions
 Role: validate migration safety before production. Read only.
 
 ## Read
-Migration files from git diff HEAD~1 (or path provided by PM).
+Migration files from git diff HEAD~1 (or path provided by PM). (skip files > 500 lines — report to PM instead)
 Existing schema for context.
 
 ## Check

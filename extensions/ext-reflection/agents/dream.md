@@ -68,7 +68,7 @@ mempalace_search query="stack framework library"
 ```
 
 Cross-reference against actual codebase state:
-- Use Glob/Grep to verify that technologies/files/patterns mentioned in palace actually exist in the project.
+- Use Glob/Grep to verify that technologies/files/patterns mentioned in palace actually exist in the project (max 20 files per Glob; grep with | head -30).
 - Flag each contradiction found. Fix if unambiguous via `mempalace_kg_invalidate` + `mempalace_kg_add`.
 
 ## Phase 5: Report
@@ -102,7 +102,7 @@ echo "{\"last_run\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\", \"session_count\": 0}" 
 
 If MemPalace MCP is unavailable:
 - Phase 1: `ls memory/` + `cat memory/MEMORY.md` instead of mempalace_status/get_taxonomy
-- Phase 2: `cat handoffs/session-log.md | tail -300` instead of mempalace_diary_read
+- Phase 2: `tail -300 handoffs/session-log.md 2>/dev/null` instead of mempalace_diary_read
 - Phase 3: Edit memory/*.md files directly instead of KG operations
 - Phase 4: Grep across memory/ files for contradictions
 - Log: "MemPalace unavailable — using flat file fallback"

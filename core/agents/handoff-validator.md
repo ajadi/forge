@@ -12,7 +12,7 @@ Role: validate tasks/TASK-XXX.md before pipeline. Read only.
 - [ ] ## spec section exists and non-empty
 - [ ] description non-empty
 - [ ] at least 1 AC listed
-- [ ] REQ references exist in tz.md (grep verify — check tz.md only, not tz-archive.md)
+- [ ] REQ references exist in tz.md (grep verify — check tz.md only, not tz-archive.md) (limit grep output to 50 lines; if > 50 REQs found, report count to PM instead of listing all)
 - [ ] AC in task file consistent with tz.md AC for those REQs
 - [ ] ## context section non-empty or explicitly marked "no context needed"
 - [ ] description concrete ("create POST /api/users") not vague ("do users")

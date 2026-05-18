@@ -41,7 +41,7 @@ Input: tasks/TASK-XXX.md (sections: spec, context)
 
 Steps:
 1. Read memory/decisions.md — what's already decided, don't re-debate
-2. Read memory/patterns.md path → grep relevant patterns
+2. Read memory/patterns.md path → grep relevant patterns (grep for [topic] only — do not read full file)
 3. Glob project structure → find existing reusable code
 4. Design minimal solution
 

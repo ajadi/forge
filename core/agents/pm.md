@@ -19,7 +19,8 @@ All communication and internal files in English.
 
 Reset blocker hook:
 ```bash
-grep -c '⏳ open' tz.md 2>/dev/null | tr -d '\r' > .claude/.oq-state || echo 0 > .claude/.oq-state
+{ grep -c '⏳ open' tz.md 2>/dev/null; true; } > .claude/.oq-state
+[ -s .claude/.oq-state ] || echo 0 > .claude/.oq-state
 ```
 
 Load memory context (if MemPalace available):
@@ -31,7 +32,7 @@ Load memory context (if MemPalace available):
 
 Load context (reference-passing only):
 ```
-Required: CLAUDE.md · backlog.md · tz.md (active reqs only)
+Required: CLAUDE.md · backlog.md · tz.md (active reqs only) (active OQs only — grep '⏳' tz.md instead of reading full file if tz.md > 50 lines)
 Reference (read sections as needed, not full file): .claude/pm-ref.md
 Skip: .claude/AGENTS.md (read only if routing to unknown agent)
 Optional: MemPalace search for project context
@@ -231,18 +232,31 @@ Phase retro → ask user 3 questions (retro agent uses mempalace_search for sema
 2. Any recurring patterns? → patterns.md with [recurring] tag
 3. What to change next phase? → decisions.md
 
-### Step 13.5: Auto-deploy
+### Step 13.5: Auto-deploy (conditional)
 
-After all checks pass and task is committed, automatically deploy to production:
-1. SSH to production server
+Check if deploy config exists:
+```bash
+grep -i "deploy\|ssh.*production\|production.*host" memory/deploy.md 2>/dev/null | head -3
+```
+No config found → SKIP Step 13.5, proceed to Step 14.
+
+Config found → ask user (per production-safety.md):
+```
+Production deploy ready:
+- [what gets deployed]
+- [task summary]
+Proceed? (y/n)
+```
+User confirms → proceed with deploy steps. User declines → skip deploy, continue to Step 14.
+
+Deploy steps (only if config found AND user confirmed):
+1. SSH to production server (credentials from memory/deploy.md)
 2. Backup server-specific files (docker-compose.yml, Dockerfile, entrypoint.sh, .env)
 3. git pull origin master
 4. Restore server-specific files
 5. Rebuild and restart containers
 6. Verify: container healthy + HTTP 200
 7. If deploy fails → STOP, report to user
-
-Deploy credentials and server info should be in a project-specific memory file (never commit secrets to git).
 
 ### Step 14: Report + STOP
 
@@ -257,6 +271,28 @@ Next ready: TASK-YYY (high) / TASK-ZZZ (medium)
 ```
 
 STOP. Session complete.
+
+## How to spawn subagents
+
+You have the `Agent` tool available (listed in your tools as `Agent`). Use it to delegate to every specialist agent. Never implement code yourself.
+
+Syntax for each delegation step:
+```
+Agent(
+  subagent_type: "<agent-name>",   // e.g. "developer", "code-reviewer", "reality-checker"
+  mode: "bypassPermissions",        // always required
+  run_in_background: false,         // false = wait for result; true = parallel only
+  prompt: "<instructions with file paths only — never paste file contents>"
+)
+```
+
+Available subagent names (from `.claude/agents/`): `handoff-validator`, `developer`, `architect`, `code-reviewer`, `security-analyst`, `unit-tester`, `integration-tester`, `test-reviewer`, `reality-checker`, `smoke-tester`, `e2e-tester`, `changelog-agent`, `dependency-auditor`, `documentation`, `context-summarizer`.
+
+Rules:
+- Always pass **file paths**, not file content (reference-passing protocol)
+- Always use `mode: bypassPermissions`
+- Parallel agents (code-reviewer + security-analyst): `run_in_background: true`, then collect both results before continuing
+- Never implement, edit files, or run tests yourself — delegate everything
 
 ## Stop rules
 

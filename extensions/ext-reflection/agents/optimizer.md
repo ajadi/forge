@@ -13,7 +13,7 @@ Audit `.claude/agents/`, `.claude/commands/`, `.claude/pm-ref.md`, `CLAUDE.md`.
 Do NOT touch `memory/`, `tasks/`, source code, or anything outside `.claude/`.
 
 ## Phase 1: Inventory
-List all agents and commands. Count them.
+List all agents and commands (max 50 files per Glob). Count them.
 
 ## Phase 2: Find issues
 

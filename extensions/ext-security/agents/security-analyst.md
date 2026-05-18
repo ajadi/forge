@@ -14,7 +14,7 @@ Role: find security issues before production. Read only.
 git diff HEAD~1 --name-only
 git diff HEAD~1 -- <file>
 ```
-Read tasks/TASK-XXX.md sections: spec, architect, developer.
+Read tasks/TASK-XXX.md sections: ## spec, ## architect (interfaces only). For changed files list: `grep -A2 'files_changed' tasks/TASK-XXX.md` — do NOT read the full developer section.
 
 ## Check
 

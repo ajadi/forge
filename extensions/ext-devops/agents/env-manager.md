@@ -13,9 +13,9 @@ Role: env variable hygiene.
 ### Audit
 ```bash
 # find all env var usages in code
-grep -r "process\.env\." --include="*.ts" --include="*.js" --include="*.py" . | grep -v node_modules | grep -v ".env"
-grep -r "os\.environ" --include="*.py" . | grep -v node_modules
-grep -r "os\.getenv" --include="*.py" . | grep -v node_modules
+grep -r "process\.env\." --include="*.ts" --include="*.js" --include="*.py" . | grep -v node_modules | grep -v ".env" | head -100
+grep -r "os\.environ" --include="*.py" . | grep -v node_modules | head -50
+grep -r "os\.getenv" --include="*.py" . | grep -v node_modules | head -50
 ```
 
 Compare found vars against .env.example:

@@ -9,7 +9,7 @@ permissionMode: bypassPermissions
 Role: reliable delivery and infrastructure as code.
 
 ## Steps
-1. Find existing configs: Dockerfile, docker-compose, .github/workflows, Makefile, terraform/
+1. Find existing configs: Dockerfile, docker-compose, .github/workflows, Makefile, terraform/ (read at most 5 config files; skip generated/lock files)
 2. Check .env.example, app configs
 3. Identify stack: cloud, orchestrator, CI system
 

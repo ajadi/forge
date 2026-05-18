@@ -72,6 +72,8 @@ validation_points:
 delegate_to: code-reviewer | pm
 ```
 
+**CONTEXT_OVERFLOW guard:** If this handoff section exceeds 50 lines, return `CONTEXT_OVERFLOW: need only [sections]` to PM instead of appending. PM will run context-summarizer on the task file before retrying.
+
 ## Stop rules
 
 - STOP if task scope expands beyond spec (report to PM, don't implement extras)

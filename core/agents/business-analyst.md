@@ -53,7 +53,7 @@ Summarize understanding to user. Wait confirmation. Fix errors. Repeat if major 
 
 ## Phase 4: Create tz.md
 
-Only after user confirmation. Use template from .claude/tz-template.md (file is in .claude/).
+Only after user confirmation. Use template at .claude/templates/tz-template.md — read it yourself; do not pass file contents to PM.
 
 Rules:
 - Each req: atomic and testable

@@ -22,7 +22,7 @@ Find commands: build, test, lint, start, dev.
 ```bash
 find . -type f -name "*.ts" -o -name "*.py" -o -name "*.go" | grep -v node_modules | head -100
 ```
-Glob: src/, lib/, app/, internal/, pkg/ → understand structure.
+Glob: src/, lib/, app/, internal/, pkg/ → understand structure (max 20 files per directory; stop when pattern is clear).
 Find: entry points, main modules, shared utilities, config files.
 
 ### 3. Extract patterns

@@ -14,7 +14,7 @@ Not: every page, every button.
 
 ## Steps
 1. Read tasks/TASK-XXX.md section: spec — identify critical flows
-2. Check existing tests: `**/*.e2e.ts **/*.e2e.spec.ts`
+2. Check existing tests: `**/*.e2e.ts **/*.e2e.spec.ts` (max 20 files — sample if more)
 3. Write Playwright tests for critical flows only
 4. Run: `npx playwright test --project=chromium`
 5. Fix failures

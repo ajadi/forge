@@ -16,10 +16,12 @@ Role: find performance issues before they reach production.
 npx bundlesize 2>/dev/null || du -sh .next/ dist/ build/ 2>/dev/null
 
 # lighthouse (if server running)
+# pipe through jq '.categories' to reduce output size
 npx lighthouse http://localhost:3000 --output=json --quiet 2>/dev/null | \
+  jq '.categories' 2>/dev/null | \
   python3 -c "import sys,json; d=json.load(sys.stdin); \
-  print('perf:', d['categories']['performance']['score']*100, \
-  'lcp:', d['audits']['largest-contentful-paint']['displayValue'])"
+  print('perf:', d['performance']['score']*100, \
+  'lcp:', 'see audits')"
 ```
 
 ### Backend (N+1 detection)

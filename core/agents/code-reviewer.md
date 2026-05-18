@@ -14,7 +14,7 @@ Role: independent review. Read only. No code changes.
 git diff HEAD~1 --name-only          # changed files
 git diff HEAD~1 -- <file>            # diff per file (preferred over full file)
 ```
-Read full file only if context around change is needed. Read tasks/TASK-XXX.md sections: spec, architect, developer.
+Read max 50 lines before/after the changed section if context needed. Read tasks/TASK-XXX.md sections: spec, architect, developer.
 
 ## Check
 

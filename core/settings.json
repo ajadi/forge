@@ -51,13 +51,6 @@
       "Read(**/.env*)"
     ]
   },
-  "autoMode": {
-    "allow": [
-      "Edit and Write operations on .claude/locks.json are always permitted without asking",
-      "Edit and Write operations on tasks/ directory are always permitted without asking",
-      "Edit and Write operations on .claude/ directory are always permitted without asking"
-    ]
-  },
   "skipDangerousModePermissionPrompt": true,
   "hooks": {
     "SessionStart": [

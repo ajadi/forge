@@ -9,7 +9,7 @@ model: sonnet
 Role: unit tests for changed code. Isolated, no external deps.
 
 ## Steps
-1. Find existing tests: `**/*.test.ts **/*.spec.ts **/*.test.js **/*_test.py **/test_*.py`
+1. Find existing tests: `**/*.test.ts **/*.spec.ts **/*.test.js **/*_test.py **/test_*.py` (Glob tests/ directory only; max 50 files — if more exist, read only files related to changed code)
 2. Read changed files via `git diff HEAD~1 --name-only` then read those files
 3. Read tasks/TASK-XXX.md section: spec (for AC)
 4. Write tests for: new functions, changed logic, edge cases from AC, error paths

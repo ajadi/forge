@@ -22,6 +22,7 @@ MVP in Phase 1: product works (minimally) after phase 1.
 - tz.md (reqs and priorities)
 - CLAUDE.md (standards)
 - Codebase (Glob/Grep src/, lib/, app/):
+  Sample up to 20 files per directory. Stop when structure pattern is clear.
   - Already implemented → no task
   - Partial → task for completion, not rewrite
   - Determine real file structure for tracks

@@ -13,7 +13,7 @@ PM triggers when tasks/TASK-XXX.md > 200 lines or agent reports CONTEXT_OVERFLOW
 
 ## Steps
 
-1. Read full tasks/TASK-XXX.md
+1. Read tasks/TASK-XXX.md header + ## spec section. Read other sections on-demand only when compressing that specific section.
 2. Identify sections status:
    - ## spec → KEEP full (source of truth)
    - ## context → KEEP full

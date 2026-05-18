@@ -31,8 +31,8 @@ If unsure — go one level up.
 | tier | model | agents |
 |------|-------|--------|
 | opus | claude-opus-4-6 | pm, architect (L/XL), developer (XL override) |
-| sonnet | claude-sonnet-4-6 | developer, ba, decomposer, code-reviewer, security-analyst, integration-tester, smoke-tester, e2e-tester, accessibility-auditor, test-reviewer, refactoring, devops, dependency-auditor, reality-checker, rapid-prototyper, database-architect, retro |
-| haiku | claude-haiku-4-5 | handoff-validator, unit-tester, documentation, status |
+| sonnet | claude-sonnet-4-6 | developer, ba, decomposer, code-reviewer, security-analyst, unit-tester, integration-tester, smoke-tester, e2e-tester, accessibility-auditor, test-reviewer, refactoring, devops, dependency-auditor, reality-checker, rapid-prototyper, database-architect, retro |
+| haiku | claude-haiku-4-5-20251001 | handoff-validator, documentation, status |
 
 ## Task file template
 ```markdown

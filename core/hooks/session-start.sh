@@ -17,8 +17,8 @@ fi
 
 # Open tasks from backlog.md
 if [ -f "backlog.md" ]; then
-    OPEN_TASKS=$(grep -c '^\- \[ \]' backlog.md 2>/dev/null | tr -d '\r' || echo 0)
-    DONE_TASKS=$(grep -c '^\- \[x\]' backlog.md 2>/dev/null | tr -d '\r' || echo 0)
+    OPEN_TASKS=$(grep -c '^\- \[ \]' backlog.md 2>/dev/null | tr -d '\r'; true); OPEN_TASKS="${OPEN_TASKS:-0}"
+    DONE_TASKS=$(grep -c '^\- \[x\]' backlog.md 2>/dev/null | tr -d '\r'; true); DONE_TASKS="${DONE_TASKS:-0}"
     TOTAL=$(( ${OPEN_TASKS:-0} + ${DONE_TASKS:-0} ))
     if [ "$TOTAL" -gt 0 ]; then
         echo ""
@@ -28,7 +28,7 @@ fi
 
 # Open questions from tz.md
 if [ -f "tz.md" ]; then
-    OQ_COUNT=$(grep -c '⏳ open' tz.md 2>/dev/null || echo 0)
+    OQ_COUNT=$(grep -c '⏳ open' tz.md 2>/dev/null | tr -d '\r'; true); OQ_COUNT="${OQ_COUNT:-0}"
     if [ "$OQ_COUNT" -gt 0 ]; then
         echo ""
         echo "⚠️  Open questions in tz.md: ${OQ_COUNT}"

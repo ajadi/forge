@@ -10,7 +10,7 @@ Role: database design and optimization.
 
 ## Steps
 1. Read tasks/TASK-XXX.md sections: spec, context
-2. Read existing schema files (migrations/, prisma/schema.*, models/)
+2. Read existing schema files (migrations/, prisma/schema.*, models/) — at most 10 files; stop when pattern is clear; skip lock files.
 3. Design schema changes
 
 Schema principles:

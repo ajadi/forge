@@ -40,7 +40,8 @@ git diff HEAD~1 | grep "^+" | grep -iE "password=|secret=|api_key=" | grep -v "t
 
 ## Step 2: Cross-check task file sections
 
-Read tasks/TASK-XXX.md all sections.
+Read tasks/TASK-XXX.md sections: ## spec, ## developer (files_changed + decisions only), ## code review verdict, ## security verdict, ## unit-tester verdict, ## integration-tester verdict.
+If task file > 200 lines: grep section headers first (`grep "^## " tasks/TASK-XXX.md`), then read only the sections listed above.
 
 developer section:
 - [ ] "done" items exist in code? grep verify each.
