@@ -3,7 +3,7 @@
 #
 # Rationale: keep the reasoning model's context for source code. Docs, data,
 # logs, lock files and other boilerplate that are large get pushed to the cheap
-# `coworker` model (DeepSeek/Moonshot) for read+summarize, or are forced to
+# `coworker` model (xAI Grok) for read+summarize, or are forced to
 # grep-only when truly huge.
 #
 # File-gate: SOURCE files are always allowed here (reasoning roles read their

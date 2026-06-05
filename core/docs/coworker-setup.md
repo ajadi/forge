@@ -1,8 +1,8 @@
 # coworker — read-delegation setup
 
 Forge delegates **large non-source reads** (docs, specs, logs, generated/boilerplate)
-to [`coworker`](https://github.com/Arcanada-one/coworker), a cheap-model CLI
-(DeepSeek / Moonshot). This keeps the reasoning model's context for source code.
+to [`coworker`](https://github.com/Arcanada-one/coworker), a cheap-model CLI backed by
+**xAI Grok**. This keeps the reasoning model's context for source code.
 
 The `coworker-read-gate` hook (`.claude/hooks/coworker-read-gate.sh`) enforces it on
 the `Read` tool. It **fails open** — if `coworker` is not installed or configured,
@@ -20,20 +20,17 @@ coworker --version
 
 ## 2. API keys — environment variables only
 
-**Never commit keys.** Set them in your shell profile / environment:
+**Never commit keys.** Set the xAI key in your shell profile / environment:
 
 ```bash
-# DeepSeek
-export DEEPSEEK_API_KEY="sk-..."
-# Moonshot (Kimi)
-export MOONSHOT_API_KEY="sk-..."
+# xAI (Grok) — get a key at https://console.x.ai
+export XAI_API_KEY="xai-..."
 ```
 
-On Windows (PowerShell), set them as user environment variables instead:
+On Windows (PowerShell), set it as a user environment variable instead:
 
 ```powershell
-setx DEEPSEEK_API_KEY "sk-..."
-setx MOONSHOT_API_KEY "sk-..."
+setx XAI_API_KEY "xai-..."
 ```
 
 ## 3. Providers & profiles
@@ -42,18 +39,16 @@ setx MOONSHOT_API_KEY "sk-..."
 and `profiles.yaml`, or a project-local equivalent). Reference these by name, with
 the actual secret pulled from the env var — no inline keys.
 
-`providers.yaml` (example shape):
+`providers.yaml` (example shape). xAI exposes an OpenAI-compatible API at
+`https://api.x.ai/v1`; confirm the current model id against the xAI docs
+(`grok-4-fast` is the cheap/fast tier; `grok-3-mini` is an alternative):
 
 ```yaml
 providers:
-  deepseek:
-    base_url: https://api.deepseek.com
-    api_key_env: DEEPSEEK_API_KEY
-    model: deepseek-chat
-  moonshot:
-    base_url: https://api.moonshot.cn/v1
-    api_key_env: MOONSHOT_API_KEY
-    model: moonshot-v1-128k
+  xai:
+    base_url: https://api.x.ai/v1
+    api_key_env: XAI_API_KEY
+    model: grok-4-fast
 ```
 
 `profiles.yaml` (example shape — a cheap profile for read/summarize):
@@ -61,7 +56,7 @@ providers:
 ```yaml
 profiles:
   read:                # used by the read-gate delegation
-    provider: deepseek
+    provider: xai
     max_tokens: 2048
     temperature: 0
 ```
