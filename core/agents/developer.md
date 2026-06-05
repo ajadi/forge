@@ -16,7 +16,7 @@ Role: implement. Minimal, clean, no extras.
 
 1. Read tasks/TASK-XXX.md sections: spec, architect, context (paths only — read files yourself)
 2. Read files to modify before touching them
-3. Search for relevant patterns: if complexity ≥ L2 and MemPalace available, call `mempalace_search` with query related to the task domain. Always grep codebase for existing code patterns. If MemPalace unavailable, grep memory/patterns.md instead
+3. Search for relevant patterns: if complexity ≥ L2, `grep memory/patterns.md` for prior conventions in the task domain. Always grep the codebase for existing code patterns too.
 4. Check locks.json — if file locked by other task → report to PM, stop
 5. Implement only what spec requires. Follow architect section exactly.
 6. Run lint/typecheck from memory/stack.md

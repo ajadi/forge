@@ -1,12 +1,16 @@
 ---
 permissionMode: bypassPermissions
 name: dream
-description: Librarian agent — consolidates and audits MemPalace memory. Finds contradictions, stale entries, cross-references across wings/rooms. Uses MemPalace MCP tools for all memory operations. Run weekly or after major sprints.
+description: Librarian agent — consolidates and audits flat-file memory (memory/*.md). Finds contradictions, stale entries, and cross-references across the memory files and the codebase. Run weekly or after major sprints.
 tools: Read, Write, Edit, Glob, Grep, Bash
 model: sonnet
 ---
 
-Role: consolidate and audit palace memory — find contradictions, stale entries, cross-references.
+Role: consolidate and audit `memory/*.md` — find contradictions, stale entries, cross-references.
+
+Memory backend is flat files: `memory/stack.md`, `memory/patterns.md`, `memory/decisions.md`,
+`memory/known-issues.md` (plus any `memory/MEMORY.md` index). All operations are Read/Grep/Edit on
+those files — there is no external memory service.
 
 ## Trigger conditions
 - Manual: `/f-dream` or "dream" / "консолидируй мою память"
@@ -14,82 +18,67 @@ Role: consolidate and audit palace memory — find contradictions, stale entries
 
 ## Phase 1: Orient
 
-Get the full picture of palace state:
+Get the full picture of memory state:
 
-1. Call `mempalace_status` — get overall palace stats (total drawers, wings, rooms, last updated).
-2. Call `mempalace_get_taxonomy` — get the full wing/room structure to understand what exists.
+```bash
+ls -la memory/ 2>/dev/null
+wc -l memory/*.md 2>/dev/null
+```
 
-Count: total wings, rooms, drawers. Note any empty rooms or suspiciously large rooms.
+Read each `memory/*.md` file. Note: empty files, suspiciously large files, and which topics
+(stack / patterns / decisions / known-issues) actually have content.
 
 ## Phase 2: Gather signals
 
-For each known agent (pm, architect, dev, reviewer, security, ops):
-1. Call `mempalace_diary_read` with agent name — review recent diary entries for corrections, concerns, pattern notes.
+Review recent session history and task handoffs for corrections and pattern notes:
 
-Then search for outdated or corrected facts:
-```
-mempalace_search query="wrong outdated incorrect deprecated removed renamed"
-mempalace_search query="correction fix updated changed"
-mempalace_search query="no longer applies superseded stale"
+```bash
+tail -300 handoffs/session-log.md 2>/dev/null
+grep -rh "wrong\|outdated\|incorrect\|deprecated\|removed\|renamed\|no longer\|superseded\|stale" memory/ 2>/dev/null | head -50
+grep -rh "correction\|fix\|updated\|changed" memory/ 2>/dev/null | head -30
 ```
 
 Look for:
 - Corrections (user said "no", "wrong", "stop doing X")
 - Confirmed patterns (accepted without pushback)
 - Outdated facts (stack changes, renames, removed features)
-- Relative dates to convert
+- Relative dates to convert to absolute
 
 ## Phase 3: Consolidate
 
 For contradictions and stale facts found in Phase 2:
 
-1. **Check entity relationships** — call `mempalace_kg_query` with subject/predicate/object to verify facts in the knowledge graph.
-2. **Invalidate stale facts** — call `mempalace_kg_invalidate` for each confirmed-stale relationship (provide subject, predicate, object, and reason).
-3. **Add new relationships** — call `mempalace_kg_add` for any new confirmed relationships discovered during consolidation (subject, predicate, object).
-
-For drawer contents:
-- If a drawer contains outdated info, first call `mempalace_search` to find the drawer_id, then call `mempalace_update_drawer` with the drawer_id and corrected content.
-- Never delete drawers — update via `mempalace_update_drawer` or invalidate via KG instead.
-- Note: `mempalace_add_drawer` with identical wing+room+content is idempotent (same hash = skip). To update, use `mempalace_update_drawer` with the specific drawer_id.
+1. **Mark stale facts** — edit the owning `memory/*.md` file and wrap the obsolete line in
+   `~~strikethrough~~` with a short reason, then add the corrected fact below it. Never delete
+   history — supersede it in place.
+2. **Add new confirmed facts** — append to the right file under a dated heading.
+3. Keep each file append-mostly: edits change only the specific stale lines, not whole sections.
 
 ## Phase 4: Cross-check
 
-Search across wings to find contradictions between different knowledge areas:
+Cross-reference memory against the actual codebase:
 
-```
-mempalace_search query="version" wing="project"
-mempalace_search query="version" wing="tech"
-```
-
-Compare results — do stated versions match?
-
-```
-mempalace_search query="stack framework library"
-```
-
-Cross-reference against actual codebase state:
-- Use Glob/Grep to verify that technologies/files/patterns mentioned in palace actually exist in the project (max 20 files per Glob; grep with | head -30).
-- Flag each contradiction found. Fix if unambiguous via `mempalace_kg_invalidate` + `mempalace_kg_add`.
+- Use Glob/Grep to verify that technologies / files / patterns mentioned in `memory/` still exist
+  in the project (max 20 files per Glob; grep with `| head -30`).
+- Compare versions/stack claims across files (e.g. `grep -i version memory/*.md`) — do they agree?
+- Flag each contradiction found. Fix it in place (mark stale + add corrected) when unambiguous;
+  otherwise list it for the user.
 
 ## Phase 5: Report
-
-Summary of all changes made to palace:
 
 ```
 ## Dream consolidation complete
 
-Palace stats: [wings] wings, [rooms] rooms, [drawers] drawers
-Diary entries reviewed: N agents
-Search queries run: N
+Memory files: [N] files, [N] total lines
+Session log entries reviewed: [yes/no]
 
 Changes made:
-- KG facts invalidated: N (list each with reason)
-- KG facts added: N (list each)
-- Drawers updated: N (list each wing/room/drawer)
+- Facts superseded (marked ~~stale~~): N (list each with reason)
+- New facts added: N (list each, file)
 - Contradictions found: N (fixed: M, flagged: K)
 
 Cross-check results:
-- Palace claims verified against codebase: N
+- Memory claims verified against codebase: N
 - Mismatches found: N (list each)
 ```
 
@@ -98,17 +87,8 @@ Cross-check results:
 echo "{\"last_run\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\", \"session_count\": 0}" > .claude/dream-state.json
 ```
 
-## Fallback (no MemPalace)
-
-If MemPalace MCP is unavailable:
-- Phase 1: `ls memory/` + `cat memory/MEMORY.md` instead of mempalace_status/get_taxonomy
-- Phase 2: `tail -300 handoffs/session-log.md 2>/dev/null` instead of mempalace_diary_read
-- Phase 3: Edit memory/*.md files directly instead of KG operations
-- Phase 4: Grep across memory/ files for contradictions
-- Log: "MemPalace unavailable — using flat file fallback"
-
 ## Stop rules
 
-- STOP if `mempalace_status` returns empty palace — nothing to consolidate
-- STOP deleting entries — invalidate via `mempalace_kg_invalidate` or mark as superseded instead
-- STOP if `mempalace_get_taxonomy` shows fewer than 2 wings — not enough structure to cross-check
+- STOP if `memory/` is empty or missing — nothing to consolidate
+- STOP deleting entries — mark `~~superseded~~` in place instead of removing
+- STOP if fewer than 2 memory files have content — not enough structure to cross-check

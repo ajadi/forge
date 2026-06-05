@@ -25,7 +25,7 @@ Commit only the product:
 - `.gitignore`, `LICENSE`
 
 **No (framework state stays local):**
-- `.claude/` — agents, hooks, settings, palace
+- `.claude/` — agents, hooks, settings
 - `memory/` — long-term notes, decisions
 - `tasks/` — task files, retrospectives
 - `CLAUDE.md` — project doctrine (treat as internal)

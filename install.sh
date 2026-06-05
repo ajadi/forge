@@ -198,50 +198,19 @@ echo ""
 # --- backup BEFORE any change ---
 backup_existing
 
-# --- MEMPALACE ---
+# --- PYTHON (optional: used for additive CLAUDE.md / settings.json merge) ---
 echo ""
-echo "[mempalace] Checking memory backend..."
+echo "[python] Checking interpreter (used for CLAUDE.md / settings merge)..."
 if [ -n "$PYTHON" ]; then
   echo "  Python: $($PYTHON --version 2>&1)"
-  if $PYTHON -c "import mempalace" 2>/dev/null; then
-    echo "  MemPalace already installed"
-  else
-    echo "  Installing MemPalace..."
-    $PYTHON -m pip install mempalace 2>/dev/null || {
-      echo "  WARN: pip install mempalace failed — install manually"
-    }
-  fi
-  # Pre-warm ChromaDB ONNX embedding model (~79MB) so first MCP add_drawer
-  # doesn't time out while Chroma lazily downloads it.
-  echo "[mempalace] Pre-warming embedding model (~79MB, one-time download)..."
-  PYTHONIOENCODING=utf-8 $PYTHON -c "
-try:
-    from chromadb.utils.embedding_functions.onnx_mini_lm_l6_v2 import ONNXMiniLM_L6_V2
-    ONNXMiniLM_L6_V2()._download_model_if_not_exists()
-    print('[mempalace] Embedding model ready.')
-except Exception as e:
-    print(f'[mempalace] Warmup skipped ({e}); will download on first use.')
-" 2>&1 | tail -20 || true
-
-  if command -v claude >/dev/null 2>&1; then
-    if claude mcp list 2>/dev/null | grep -q mempalace; then
-      echo "  MCP server already registered"
-    else
-      claude mcp add mempalace -- $PYTHON -m mempalace.mcp_server 2>/dev/null \
-        && echo "  MCP server registered" \
-        || echo "  WARN: claude mcp add failed — register manually"
-    fi
-  else
-    echo "  WARN: claude CLI not found — register MCP server manually after install"
-  fi
 else
   if command -v winget >/dev/null 2>&1; then
-    echo "  Python not found — installing via winget..."
+    echo "  Python not found — installing via winget (merge step needs it)..."
     winget install Python.Python.3.12 --accept-source-agreements --accept-package-agreements 2>/dev/null \
       && echo "  Python installed — restart terminal and re-run installer" \
       || echo "  WARN: winget install Python failed"
   else
-    echo "  WARN: Python 3.9+ not found — install from https://python.org"
+    echo "  WARN: Python 3.9+ not found — CLAUDE.md will be copied, not merged. Install from https://python.org"
   fi
 fi
 
@@ -285,11 +254,6 @@ for k, v in t_hooks.items():
     if k not in e_hooks:
         e_hooks[k] = v; added += 1
 existing['hooks'] = e_hooks
-# Make sure mempalace MCP server entry exists
-if 'mcpServers' in template:
-    existing.setdefault('mcpServers', {})
-    for k, v in template['mcpServers'].items():
-        existing['mcpServers'].setdefault(k, v)
 with open(existing_path, 'w') as f:
     json.dump(existing, f, indent=2); f.write('\n')
 print(f"  settings.json: merged ({added} new hook entries)")
@@ -299,15 +263,6 @@ PY
   fi
 }
 install_settings
-
-# Patch MCP server python command to match detected interpreter
-if [ -n "$PYTHON" ] && [ "$PYTHON" != "python" ] && [ -f "$TARGET/.claude/settings.json" ]; then
-  if [[ "$OSTYPE" == "darwin"* ]]; then
-    sed -i '' "s|\"command\": \"python\"|\"command\": \"$PYTHON\"|" "$TARGET/.claude/settings.json" 2>/dev/null || true
-  else
-    sed -i "s|\"command\": \"python\"|\"command\": \"$PYTHON\"|" "$TARGET/.claude/settings.json" 2>/dev/null || true
-  fi
-fi
 
 # Skills (preserve directory structure)
 if [ -d "$FORGE_DIR/core/skills" ]; then

@@ -2,7 +2,7 @@
 
 ## Why this exists
 
-Forge installs a lot of state into a project: agents, hooks, palace memory,
+Forge installs a lot of state into a project: agents, hooks, memory files,
 task files, retrospectives, decision logs. In a single-user repo that's fine
 — it's the agent's working memory. In a shared or public repo it's a leak:
 internal reasoning, half-baked plans, and timestamps end up in branch history
@@ -66,7 +66,7 @@ The switch script detects this and aborts. Options:
 | Commit framework files | Yes | No (local-only) |
 | `pre-compact` hook commits framework state | Yes | No — hook stops if framework still tracked |
 | `validate-push` blocks framework leak | No | Yes |
-| MemPalace diary / palace lives in repo | Yes | No (lives in `.claude/`, gitignored) |
+| `memory/` notes live in repo | Yes | No (gitignored) |
 
 ## Quick check
 

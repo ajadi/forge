@@ -1,8 +1,8 @@
 # Forge
 
-Modular multi-agent development framework for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) with built-in semantic memory powered by [MemPalace](https://github.com/MemPalace/mempalace).
+Modular multi-agent development framework for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) with lightweight, file-based project memory.
 
-Forge turns Claude Code into a full dev team: PM orchestrates, agents implement, review, test, and deploy. MemPalace gives every agent persistent semantic memory with 96.6% recall — no more grep on flat files.
+Forge turns Claude Code into a full dev team: PM orchestrates, agents implement, review, test, and deploy. Persistent project knowledge lives in plain `memory/*.md` files that every agent greps before guessing — no external service, no daemon, nothing to install.
 
 ## Quick Start
 
@@ -67,8 +67,8 @@ index and toggles the `framework-public-ignore` block in `.gitignore`. See
 ### Prerequisites
 
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) CLI
-- Python 3.9+ (for MemPalace memory backend)
-- `pip install mempalace` (installed automatically by `install.sh`)
+- Git Bash (Windows) — hooks use `#!/bin/bash`
+- Python 3.9+ *(optional)* — only used to merge an existing `CLAUDE.md` / `settings.json` on install; without it those files are copied, not merged
 
 ## What It Does
 
@@ -104,12 +104,10 @@ PM agent (opus) ── reads pm-ref.md, AGENTS.md
  +-- ... (37 agents total)
  |
  v
-MemPalace (MCP server) ── semantic memory for all agents
- +-- 29 MCP tools (search, store, knowledge graph)
- +-- Hybrid search: BM25 + vector (96.6% recall)
- +-- Agent diaries (per-agent memory isolation)
- +-- Knowledge graph (temporal entity relationships)
- +-- Auto-save hooks (Stop + PreCompact)
+memory/*.md ── flat-file project memory for all agents
+ +-- stack.md · patterns.md · decisions.md · known-issues.md
+ +-- agents grep before stating facts, append after tasks
+ +-- superseded facts marked ~~strikethrough~~, never deleted
 ```
 
 ### Key Design Principles
@@ -119,53 +117,37 @@ MemPalace (MCP server) ── semantic memory for all agents
 - **Handoff contracts** — standardized format between agents (status, files_changed, validation_points)
 - **Stop rules** — every agent knows exactly when to halt
 - **Autonomy ladder** (A1-A5) — agents earn more freedom with proven reliability
-- **Semantic memory** — agents search palace before guessing facts, write diary after sessions
+- **File-based memory** — agents grep `memory/*.md` before guessing facts, append findings after tasks
 
-## Memory System (MemPalace)
+## Memory System (flat files)
 
-Forge uses [MemPalace](https://github.com/MemPalace/mempalace) as its built-in memory backend. Every agent can:
+Forge keeps persistent project knowledge in plain Markdown under `memory/`. No external service, no
+daemon, no embeddings — just files agents read and append.
 
-| Operation | MCP Tool | What it does |
-|-----------|----------|-------------|
-| **Search** | `mempalace_search` | Hybrid semantic + keyword search across all memories |
-| **Store** | `mempalace_add_drawer` | Save verbatim content in wing/room/drawer hierarchy |
-| **Diary** | `mempalace_diary_write` | Per-agent timestamped diary entries |
-| **Knowledge Graph** | `mempalace_kg_add` | Store entity relationships with temporal validity |
-| **Query facts** | `mempalace_kg_query` | Get all facts about an entity, optionally at a point in time |
-| **Navigate** | `mempalace_traverse` | Walk the memory graph to find connected ideas |
+| File | What it holds | Written by |
+|------|---------------|------------|
+| `memory/stack.md` | Tech stack, build/test/lint commands | onboarding, PM, architect |
+| `memory/patterns.md` | Code patterns + `[recurring]` tags | developer, retro |
+| `memory/decisions.md` | Architectural decisions | architect, retro, reflect |
+| `memory/known-issues.md` | Issues, workarounds + `[recurring]` tags | retro, any agent |
 
 ### Memory Protocol
 
-1. **On wake-up**: Call `mempalace_status` (loads protocol + palace stats). Empty palace (`wings: {}`) is not an error — first task seeds it.
-2. **Before facts**: Search palace first via `mempalace_search` — never guess
-3. **After session**: Write diary via `mempalace_diary_write`
-4. **When facts change**: Invalidate old + add new via knowledge graph
-
-> Don't run interactive `mempalace init` from inside an agent — it produces low-quality entity suggestions for typical Forge projects. PM seeds the wing on first task close instead.
+1. **Before facts**: `grep memory/*.md` for the relevant entry — never guess.
+2. **After a task**: append genuinely new facts under a dated heading in the right file.
+3. **When facts change**: mark the obsolete line `~~strikethrough~~` with a reason and add the corrected fact below — append-only, never silently overwrite.
+4. **Cold start**: an empty `memory/` on a fresh project is not an error — it seeds itself as tasks close.
 
 ### How Agents Use Memory
 
-| Agent | How it uses palace |
-|-------|--------------------|
-| **developer** | Searches for relevant patterns before implementing |
-| **dream** | Consolidates palace: finds contradictions, invalidates stale facts, cross-references |
-| **retro** | Stores phase retrospective findings, tracks recurring patterns via knowledge graph |
-| **reflect** | Writes task analysis to diary, records patterns in knowledge graph |
-| **onboarding** | Populates palace with project stack, patterns, and entity relationships |
-| **pm** | Loads project context from palace on session start |
-
-### Auto-Save Hooks
-
-- **Stop hook** (`mempal-save.sh`): Checkpoints conversation every 15 exchanges
-- **PreCompact hook** (`mempal-precompact.sh`): Emergency save before context compression — nothing is lost
-
-### Graceful Degradation
-
-If MemPalace is not installed or the MCP server is unavailable:
-- All hooks exit silently (no errors, no blocks)
-- Agents fall back to `grep memory/*.md` for pattern search
-- dream/retro/reflect agents fall back to flat file operations
-- The pipeline works fully — just without semantic memory
+| Agent | How it uses `memory/` |
+|-------|------------------------|
+| **developer** | Greps `patterns.md` for prior conventions before implementing |
+| **dream** | Consolidates `memory/*.md`: finds contradictions, marks stale facts, cross-references the codebase |
+| **retro** | Writes phase retrospective findings, tags recurring patterns |
+| **reflect** | Records lasting proposals in `decisions.md` / `patterns.md` |
+| **onboarding** | Populates `stack.md`, `patterns.md`, `decisions.md`, `known-issues.md` from the existing project |
+| **pm** | Greps `memory/*.md` for project context on session start |
 
 ## Structure
 
@@ -175,13 +157,13 @@ forge/
     AGENTS.md               # Team roster: roles, models, boundaries
     agents/                 # 13 core agents
     commands/               # 11 slash commands (/f-fix, /f-start, etc.)
-    hooks/                  # Session lifecycle, git validation, metrics, MemPalace auto-save
+    hooks/                  # Session lifecycle, git validation, metrics
     rules/                  # Modular doctrine: repo-access, commit-policy, production-safety
     scripts/                # switch-repo-access, framework-state-mode, lib/merge_claude_md.py
     skills/                 # next-task, status, setup-project
     templates/              # tz-template, adr-template, manifest.md.tmpl, gitignore.tmpl
     pm-ref.md               # Pipeline reference
-    settings.json           # Base permissions, hooks, MCP server config (UTF-8 env)
+    settings.json           # Base permissions, hooks
 
   extensions/               # Install per project need
     ext-security/           # security-analyst, dependency-auditor
@@ -237,7 +219,7 @@ forge/
 | `/f-decompose` | Break feature into tasks |
 | `/f-status` | Show project progress |
 | `/f-next-task` | What to work on next |
-| `/f-dream` | Run memory consolidation (MemPalace) |
+| `/f-dream` | Run memory consolidation (audits `memory/*.md`) |
 | `/f-reflect` | Post-task reflection and learning |
 | `/f-spike` | Technical spike to validate hypothesis |
 | `/f-new-task` | Create a new task file |
@@ -265,7 +247,7 @@ Agents earn autonomy with proven reliability. New projects start at A2.
 - **Scope creep detected** -> Stop rule fires, autonomy level drops
 - **Regression in tests** -> Immediate STOP, user notified
 - **Metrics degrading** -> session-stop hook logs to `.claude/metrics.log`, dream agent reviews
-- **Context overflow** -> PreCompact hook saves to MemPalace before compression, nothing lost
+- **Context overflow** -> PreCompact hook dumps live state to disk before compression, nothing lost
 
 ## Installation Details
 
@@ -277,20 +259,19 @@ bash install.sh --list
 bash install.sh /my/project --preset full
 #   .claude/agents/        <- 37 agent definitions
 #   .claude/commands/      <- 28 slash commands
-#   .claude/hooks/         <- 11 lifecycle hooks (including MemPalace auto-save)
+#   .claude/hooks/         <- 9 lifecycle hooks
 #   .claude/rules/         <- 3 modular doctrine files
 #   .claude/skills/        <- 3 custom skills (next-task, status, setup-project)
 #   .claude/templates/     <- requirement + ADR templates
 #   .claude/AGENTS.md      <- team roster
 #   .claude/pm-ref.md      <- pipeline reference
-#   .claude/settings.json  <- permissions, hooks, MCP server config
+#   .claude/settings.json  <- permissions, hooks
 #   .claude/statusline.sh  <- status bar script
 #   CLAUDE.md              <- project doctrine (additive merge if exists)
 #   manifest.md            <- project metadata + repo_access mode
 #   scripts/               <- switch-repo-access.sh, framework-state-mode.sh, lib/
 #   tasks/                 <- task tracking
-#   memory/                <- long-term notes (palace fallback)
-#   + MemPalace            <- pip install + MCP server registration + ONNX pre-warm
+#   memory/                <- long-term notes (flat-file project memory)
 ```
 
 The installer never silently overwrites existing files: every run snapshots
@@ -327,6 +308,12 @@ Role: [what this agent does]
 
 Place in `.claude/agents/` and add a matching command in `.claude/commands/` if needed.
 
+## What's New in v2.2
+
+- **MemPalace removed** — memory is now plain `memory/*.md` files only. No MCP server, no `pip install`, no embedding model, no auto-save hooks. The `mempal-save.sh` / `mempal-precompact.sh` hooks and the `mcpServers` block in `settings.json` are gone; `install.sh` no longer installs or registers anything Python-side beyond an optional `CLAUDE.md` merge.
+- **dream / retro / reflect / onboarding** rewritten to read and append `memory/*.md` directly (grep + edit), marking superseded facts `~~strikethrough~~` instead of invalidating graph relationships.
+- **Python is now optional** — only used to merge an existing `CLAUDE.md` / `settings.json` on install.
+
 ## What's New in v2.1
 
 **Install UX**
@@ -354,19 +341,14 @@ Place in `.claude/agents/` and add a matching command in `.claude/commands/` if 
 
 **Windows polish**
 
-- `core/settings.json` ships `PYTHONIOENCODING=utf-8` + `PYTHONUTF8=1` in the MempPalace MCP server env (prevents cp1252 crashes on emoji/arrows in stored content).
-- `install.sh` pre-warms the ChromaDB ONNX embedding model (~79 MB) immediately after `pip install mempalace`, so the first `add_drawer` call doesn't time out.
-- `CLAUDE.md` clarifies that an empty palace on wake-up (`wings: {}`) is not an error and that agents should NOT run interactive `mempalace init`.
+- Hooks use `#!/bin/bash` — run under Git Bash on Windows.
+- `install.sh` detects `python` vs `python3` and, if Python is missing, offers a winget install (only needed for the optional `CLAUDE.md` merge).
 
 ## What's New in v2.0
 
-- **MemPalace integration** — semantic memory backend with 29 MCP tools, replacing flat `memory/*.md` files
-- **Auto-save hooks** — conversation checkpoints every 15 exchanges + emergency save before context compression
-- **Knowledge graph** — temporal entity relationships (who works on what, when facts changed)
-- **Agent diaries** — per-agent isolated memory with timestamped entries
-- **Graceful degradation** — everything works without MemPalace (falls back to flat files)
+- **Auto-save hooks** — session lifecycle hooks (`session-start`, `session-stop`, `pre-compact`) checkpoint and dump live state to disk
 - **Windows support** — hooks detect `python` vs `python3`, installer auto-installs Python via winget
-- **Token optimizations** — conditional palace search (L2+ only), AGENTS.md lazy-loaded, complexity table deduplicated
+- **Token optimizations** — AGENTS.md lazy-loaded, complexity table deduplicated
 - **New hooks** — `detect-gaps.sh` (missing files warning), `check-blockers.sh` (OQ detection after agent runs)
 
 ## Upgrading
@@ -385,30 +367,24 @@ bash forge/install.sh /path/to/your/project --apply-proposal
 scripts/switch-repo-access.sh public --commit
 ```
 
-### From v1.x → v2.x
+### From v2.x (with MemPalace) → v2.2
 
 ```bash
-# Re-run the installer
+# Re-run the installer — memory is now flat-file only, nothing to install.
 bash forge/install.sh /path/to/your/project --preset full
 
-# Install MemPalace
-pip install mempalace
-
-# Register MCP server
-claude mcp add mempalace -- python -m mempalace.mcp_server
+# Optional cleanup of the old MemPalace wiring, if it lingers:
+claude mcp remove mempalace 2>/dev/null || true
+# Existing memory/*.md files are kept as-is and remain the source of truth.
 ```
 
 ## Troubleshooting
 
 | Problem | Fix |
 |---------|-----|
-| `mempalace` MCP tools not available | Run `pip install mempalace` and `claude mcp add mempalace -- python -m mempalace.mcp_server` |
 | Hooks error on Windows | Ensure Git Bash is the default shell. Hooks use `#!/bin/bash`. |
-| `python3` not found | On Windows, Python installs as `python`, not `python3`. Forge handles this automatically. |
-| Agent says "MemPalace unavailable" | Check MCP server: `claude mcp list`. If missing, re-register. Agents will fall back to flat files. |
-| Empty palace on first run (`wings: {}`) | Not an error. Continue normally — palace seeds itself on first task close. Don't run interactive `mempalace init`. |
-| First `mempalace_add_drawer` times out | Pre-warm step in `install.sh` failed. Run it manually: `python -c "from chromadb.utils.embedding_functions.onnx_mini_lm_l6_v2 import ONNXMiniLM_L6_V2; ONNXMiniLM_L6_V2()._download_model_if_not_exists()"` |
-| Stored content has cp1252 mojibake | `core/settings.json` env block missing `PYTHONIOENCODING=utf-8` + `PYTHONUTF8=1`. v2.1 ships these by default; for upgrades from v2.0 add them manually under `mcpServers.mempalace.env`. |
+| `python3` not found | On Windows, Python installs as `python`, not `python3`. Forge handles this automatically (Python is only needed for the optional `CLAUDE.md` merge). |
+| Empty `memory/` on first run | Not an error. Continue normally — memory files seed themselves as tasks close. |
 | install.sh exits with code 2 | Hard conflict in `CLAUDE.md`. Read `.claude/CLAUDE.md.merge-proposal.md`, resolve, then `bash install.sh --apply-proposal`. Or `bash install.sh --rollback` to abort. |
 | install.sh exits with other error | Run with `bash -x install.sh ...` for debug output. Common cause: empty extension directories. |
 | Framework files leaked to public branch | `scripts/switch-repo-access.sh` blocks the switch when upstream history already contains framework files. Use `git filter-repo` to rewrite, or cut a fresh branch from before the framework commits. |
@@ -417,7 +393,6 @@ claude mcp add mempalace -- python -m mempalace.mcp_server
 ## Credits
 
 - Pipeline design inspired by ideas from [alexeykrol/coursevibecode](https://github.com/alexeykrol/coursevibecode) — autonomy ladder, stop rules, handoff contracts, Ralph Loop, escalation matrix.
-- Memory system powered by [MemPalace](https://github.com/MemPalace/mempalace) — local-first semantic memory with hybrid search and knowledge graphs.
 
 ## License
 

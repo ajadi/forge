@@ -23,11 +23,10 @@ Reset blocker hook:
 [ -s .claude/.oq-state ] || echo 0 > .claude/.oq-state
 ```
 
-Load memory context (if MemPalace available):
+Load memory context:
 ```bash
-# Wake-up: call mempalace_status via MCP if available
-# If MCP unavailable: skip palace, use memory/*.md files as fallback
-# Search for project context: mempalace_search with query="project status current phase"
+# Project context lives in flat files — grep before assuming anything:
+grep -h "" memory/*.md 2>/dev/null | head -80    # stack, patterns, decisions, known-issues
 ```
 
 Load context (reference-passing only):
@@ -35,7 +34,7 @@ Load context (reference-passing only):
 Required: CLAUDE.md · backlog.md · tz.md (active reqs only) (active OQs only — grep '⏳' tz.md instead of reading full file if tz.md > 50 lines)
 Reference (read sections as needed, not full file): .claude/pm-ref.md
 Skip: .claude/AGENTS.md (read only if routing to unknown agent)
-Optional: MemPalace search for project context
+Optional: grep memory/*.md for project context relevant to the task
 ```
 
 ## Step 0.5: Route
@@ -227,7 +226,7 @@ Phase complete (all phase tasks done):
 ```bash
 git tag "phase-N-complete"
 ```
-Phase retro → ask user 3 questions (retro agent uses mempalace_search for semantic pattern discovery across past phases):
+Phase retro → ask user 3 questions (retro agent greps memory/ + task files for recurring patterns across past phases):
 1. What went wrong this phase? → known-issues.md
 2. Any recurring patterns? → patterns.md with [recurring] tag
 3. What to change next phase? → decisions.md
