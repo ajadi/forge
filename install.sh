@@ -216,7 +216,7 @@ fi
 
 # --- directory skeleton ---
 mkdir -p "$TARGET/.claude"/{agents,commands,hooks,skills,decisions,templates,rules,logs/sessions,logs/migrations,logs/errors}
-mkdir -p "$TARGET"/{memory,tasks/archive,scripts/lib}
+mkdir -p "$TARGET"/{memory,tasks/archive,scripts/lib,docs}
 
 # --- CORE ---
 echo ""
@@ -230,6 +230,9 @@ cp "$FORGE_DIR"/core/pm-ref.md        "$TARGET/.claude/"
 cp "$FORGE_DIR"/core/statusline.sh    "$TARGET/.claude/"
 cp "$FORGE_DIR"/core/AGENTS.md        "$TARGET/.claude/AGENTS.md"
 cp "$FORGE_DIR"/core/templates/*.md   "$TARGET/.claude/templates/" 2>/dev/null || true
+
+# docs/ — human setup guides referenced by CLAUDE.md (e.g. coworker-setup.md)
+cp "$FORGE_DIR"/core/docs/*.md        "$TARGET/docs/" 2>/dev/null || true
 
 # scripts/ — repo_access machinery + merger lib
 cp "$FORGE_DIR"/core/scripts/framework-state-mode.sh "$TARGET/scripts/"

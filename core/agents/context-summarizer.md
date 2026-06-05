@@ -40,3 +40,4 @@ PM triggers when tasks/TASK-XXX.md > 200 lines or agent reports CONTEXT_OVERFLOW
 - NEVER lose open issues or delegate-to instructions
 - if in doubt → keep, don't summarize
 - after summarizing → tell PM: "summarized TASK-XXX: N→M lines"
+- Delegation: the task file under compression you read directly. But any large non-source input it references (reference docs, logs, generated/boilerplate files) → read via `coworker ask "<question>" --file <path>` and summarize from its output, rather than loading it whole. See "Delegation & cache discipline" in CLAUDE.md.
