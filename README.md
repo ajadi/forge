@@ -42,7 +42,7 @@ the skill will run `install.sh` for the current folder, no manual download.
 
 | Flag | What |
 |------|------|
-| `--preset solo|small-team|full` | Pick a bundle |
+| `--preset solo\|small-team\|full` | Pick a bundle |
 | `--ext name1,name2` | Add specific extensions |
 | `--name "..."` | Project name written into `manifest.md` |
 | `--rollback` | Restore the last backup (`.claude/backup-TIMESTAMP/`) |

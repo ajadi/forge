@@ -1,50 +1,52 @@
 #!/bin/bash
 # PreToolUse (Write|Edit) hook: enforce the role boundaries declared in AGENTS.md.
 #
-# The roster says "PM never implements", "reviewers read-only", "developer cannot
-# modify pm-ref/CLAUDE/agent defs", "unit-tester only touches tests" — but nothing
-# used to ENFORCE it. This hook does.
+# Identity (who is acting), in priority order:
+#   1. The `agent_type` / `agent_name` field the hook receives on stdin — when the
+#      runtime provides it this is authoritative, per-call and race-free (the main
+#      orchestrator omits it => pm-inline).
+#   2. Fallback: the `.claude/.current-agent` marker written by log-agent.sh on
+#      SubagentStart (TTL ROLE_GUARD_TTL, default 1800s; stale/absent => pm-inline).
+#      Used only on runtimes that don't surface agent identity to PreToolUse. This
+#      path is last-writer-wins and can misattribute under parallel subagents.
 #
-# Who is acting: the SubagentStart hook (log-agent.sh) writes the current agent to
-# `.claude/.current-agent` as "<epoch> <name>". This guard reads it. Missing or
-# older than ROLE_GUARD_TTL (default 1800s) ⇒ treated as PM-inline (the orchestrator
-# itself). NOTE: under parallel subagents this marker is last-writer-wins and may
-# misattribute — a documented limitation of the marker approach.
+# Decision (path relative to project root):
+#   PROTECTED (hooks, settings, statusline, .gitignore, agent defs, doctrine, the
+#     marker itself) -> DENY for every agent incl. pm-inline. Only the human edits
+#     the enforcement surface; otherwise an agent could neuter the guard.
+#   FW (framework STATE: .claude/ state, tasks/, memory/, handoffs/, tz.md,
+#     backlog.md, manifest.*) -> allow for all (task files, handoffs, memory).
+#   Otherwise product source -> role rules: pm-inline & read-only roles denied;
+#     testers only test files; doc-writers only docs; impl agents allowed.
 #
-# Classification (path relative to project root):
-#   FW       = framework state anyone may write (.claude/, tasks/, memory/, handoffs/,
-#              docs/, scripts/, logs/, tz.md, backlog.md, manifest.*, *.log, locks.json,
-#              CLAUDE.md, AGENTS.md, pm-ref.md)  -> allowed (task files, handoffs, memory)
-#   AGENTDEF = framework definitions impl agents must NOT touch (CLAUDE.md, pm-ref.md,
-#              .claude|core|extensions agents/)
-#   TEST     = test files
-#   DOC      = .md/.rst/.txt or docs/
-#   SOURCE   = anything else (product code)
+# Block convention: message on stdout, exit 2 to deny, exit 0 to allow. FAILS OPEN
+# on uncertainty. Disable entirely with ROLE_WRITE_GUARD=off.
 #
-# Block convention matches the other Forge PreToolUse hooks: message on stdout,
-# exit 2 to deny, exit 0 to allow. FAILS OPEN on any uncertainty.
-# Disable entirely with ROLE_WRITE_GUARD=off.
+# Known limitation: classification is on the path string, not the resolved target,
+# so a symlink under a framework dir (created via Bash) pointing at source is not
+# caught — symlink creation needs Bash, which this Write|Edit hook does not gate.
 set +e
 
 [ "${ROLE_WRITE_GUARD:-on}" = "off" ] && exit 0
 
 INPUT=$(cat)
 
-# --- target path ---
+# --- target path + acting agent (single jq pass when available) ---
 if command -v jq >/dev/null 2>&1; then
-    FILE_PATH=$(echo "$INPUT" | jq -r '.tool_input.file_path // ""' 2>/dev/null)
+    FILE_PATH=$(printf '%s' "$INPUT" | jq -r '.tool_input.file_path // ""' 2>/dev/null)
+    STDIN_AGENT=$(printf '%s' "$INPUT" | jq -r '.agent_type // .agent_name // ""' 2>/dev/null)
 else
-    FILE_PATH=$(echo "$INPUT" | grep -oE '"file_path"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 \
+    FILE_PATH=$(printf '%s' "$INPUT" | grep -oE '"file_path"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 \
         | sed 's/"file_path"[[:space:]]*:[[:space:]]*"//;s/"$//')
+    STDIN_AGENT=$(printf '%s' "$INPUT" | grep -oE '"agent_type"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 \
+        | sed 's/.*:[[:space:]]*"//;s/"$//')
+    [ -z "$STDIN_AGENT" ] && STDIN_AGENT=$(printf '%s' "$INPUT" | grep -oE '"agent_name"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 \
+        | sed 's/.*:[[:space:]]*"//;s/"$//')
 fi
 [ -z "$FILE_PATH" ] && exit 0   # no path -> fail open
 
-# --- relativize to project root (case-insensitive; Windows drive letters vary) ---
-# Normalize backslashes via tr (octal \134 = '\') — version-independent, unlike
-# the ${var//\\//} parameter expansion whose behavior varies across bash builds.
-# tr '\134'='\' -> '/', then squeeze repeated slashes. The grep JSON fallback
-# (used when jq is absent) yields JSON-escaped doubled backslashes; squeezing
-# makes single- and double-separator forms normalize identically.
+# --- relativize to project root (normalize backslashes + squeeze slashes;
+#     case-insensitive prefix compare for Windows drive letters) ---
 PROJ="${CLAUDE_PROJECT_DIR:-$(pwd)}"
 PROJ_N=$(printf '%s' "$PROJ" | tr '\134' '/' | tr -s '/')
 FP_N=$(printf '%s' "$FILE_PATH" | tr '\134' '/' | tr -s '/')
@@ -52,81 +54,76 @@ proj_l=$(printf '%s' "$PROJ_N" | tr 'A-Z' 'a-z')
 fp_l=$(printf '%s' "$FP_N" | tr 'A-Z' 'a-z')
 case "$fp_l/" in
     "$proj_l"/*) REL="${FP_N:${#PROJ_N}}"; REL="${REL#/}" ;;
-    *)           REL="$FP_N" ;;   # outside project root
+    *)           REL="$FP_N" ;;
 esac
-# Still absolute? path is outside the project tree -> fail open (git guards cover that)
-case "$REL" in
-    /*|[A-Za-z]:*) exit 0 ;;
-esac
-rel_l=$(printf '%s' "$REL" | tr 'A-Z' 'a-z')
+# Outside the project tree -> fail open (git guards cover that).
+case "$REL" in /*|[A-Za-z]:*) exit 0 ;; esac
 
-# --- who is acting ---
-TTL="${ROLE_GUARD_TTL:-1800}"
-AGENT="pm-inline"
-MARKER="$PROJ_N/.claude/.current-agent"
-if [ -f "$MARKER" ]; then
-    M_TS=$(awk '{print $1}' "$MARKER" 2>/dev/null)
-    M_AGENT=$(awk '{print $2}' "$MARKER" 2>/dev/null)
-    NOW=$(date +%s)
-    if [ -n "$M_TS" ] && [ -n "$M_AGENT" ] && [ $((NOW - M_TS)) -lt "$TTL" ] 2>/dev/null; then
-        AGENT="$M_AGENT"
-    fi
+deny() { echo "BLOCKED (role-write-guard): $1"; exit 2; }
+
+# Reject path traversal — a `..` segment can dodge the `^`-anchored classifiers
+# (e.g. tasks/../src/x.ts would look like framework state). Normalized paths only.
+case "/$REL/" in *"/../"*) deny "path '$REL' contains a '..' segment; pass a normalized path." ;; esac
+
+# REL is matched in ORIGINAL case for directory prefixes (so a product dir named
+# Memory/ or Tasks/ is NOT mistaken for framework state); known filenames and
+# extensions are matched case-insensitively.
+cs() { printf '%s' "$REL" | grep -qE "$1"; }   # case-sensitive
+ci() { printf '%s' "$REL" | grep -qiE "$1"; }   # case-insensitive
+
+# 1) PROTECTED enforcement surface — denied for ALL agents (human-owned).
+if cs '^\.claude/hooks/|^\.claude/agents/|^core/agents/|^extensions/.+/agents/|^\.claude/\.current-agent$' \
+   || ci '^\.claude/settings(\.local)?\.json$|^\.claude/statusline\.sh$|^\.gitignore$|^claude\.md$|^pm-ref\.md$|^\.claude/pm-ref\.md$|^agents\.md$|^\.claude/agents\.md$'; then
+    deny "'$REL' is protected enforcement/doctrine infrastructure (hooks, settings, agent defs, CLAUDE.md, pm-ref.md, .gitignore). Only the human edits these — report the needed change instead."
 fi
 
-# --- classify path ---
-is() { printf '%s' "$rel_l" | grep -qE "$1"; }
+# 2) framework STATE — task files, handoffs, memory, .claude state: allow for all.
+if cs '^\.claude/|^tasks/|^memory/|^handoffs/' \
+   || ci '^tz\.md$|^backlog\.md$|^manifest\.(md|json)$|^forge-upgrade-progress\.md$'; then
+    exit 0
+fi
 
-FW=false; AGENTDEF=false; TEST=false; DOC=false
-# Framework STATE only — what agents legitimately write during a task. Deliberately
-# NOT docs/, scripts/, logs/ or bare *.log / locks.json: those hold product code in
-# real projects and must not be a blanket allow for read-only roles. (Framework logs
-# and locks live under .claude/, which is covered.)
-is '^\.claude/|^tasks/|^memory/|^handoffs/|^tz\.md$|^backlog\.md$|^manifest\.(md|json)$|^\.gitignore$|^claude\.md$|^agents\.md$|^pm-ref\.md$|^forge-upgrade-progress\.md$' && FW=true
-is '^claude\.md$|^pm-ref\.md$|^\.claude/pm-ref\.md$|^\.claude/agents/|^core/agents/|^extensions/.+/agents/|^agents\.md$|^\.claude/agents\.md$' && AGENTDEF=true
-is '(^|/)(tests?|__tests__|specs?|e2e)/|\.(test|spec)\.[a-z0-9]+$|_test\.[a-z0-9]+$|(^|/)test_[^/]*\.py$' && TEST=true
-is '\.(md|mdx|rst|txt|adoc)$|^docs/' && DOC=true
+# 3) product source — apply the acting role's boundary.
+AGENT="$STDIN_AGENT"
+if [ -z "$AGENT" ]; then
+    # Fallback: marker file (only when the runtime didn't give us identity).
+    TTL="${ROLE_GUARD_TTL:-1800}"
+    MARKER="$PROJ_N/.claude/.current-agent"
+    if [ -f "$MARKER" ]; then
+        M_TS=$(awk '{print $1}' "$MARKER" 2>/dev/null)
+        M_AGENT=$(awk '{print $2}' "$MARKER" 2>/dev/null)
+        NOW=$(date +%s)
+        if [ -n "$M_TS" ] && [ -n "$M_AGENT" ] && [ $((NOW - M_TS)) -lt "$TTL" ] 2>/dev/null; then
+            AGENT="$M_AGENT"
+        fi
+    fi
+fi
+[ -z "$AGENT" ] && AGENT="pm-inline"
 
-# --- role sets ---
-# Roles that must NOT write product source. Includes propose-only / plan-only /
-# memory-only agents (decomposer, optimizer, onboarding, dream, reflect, retro,
-# context-summarizer): their legit writes are framework state (FW), allowed above;
-# they have no business writing product source, so they are NOT in IMPL.
+TEST=false; DOC=false
+ci '(^|/)(tests?|__tests__|specs?|e2e)/|\.(test|spec)\.[a-z0-9]+$|_test\.[a-z0-9]+$|(^|/)test_[^/]*\.py$' && TEST=true
+ci '\.(md|mdx|rst|txt|adoc)$|^docs/' && DOC=true
+
 READONLY_NOSRC=" pm architect code-reviewer reality-checker business-analyst security-analyst dependency-auditor status handoff-validator accessibility-auditor performance-profiler test-reviewer estimator consilium migration-validator smoke-tester e2e-tester ux-interviewer ui-designer decomposer optimizer onboarding dream reflect retro context-summarizer "
-IMPL=" developer database-architect devops env-manager refactoring rapid-prototyper git-workflow "
 TESTER=" unit-tester integration-tester "
 DOCWRITER=" documentation changelog-agent "
 in_set() { case "$1" in *" $AGENT "*) return 0;; *) return 1;; esac; }
 
-deny() { echo "BLOCKED (role-write-guard): $1"; exit 2; }
-
-# The role marker is owned by the SubagentStart hook (log-agent.sh). No agent may
-# write it via Write/Edit — otherwise a read-only role could self-promote to
-# developer and bypass every check below.
-[ "$rel_l" = ".claude/.current-agent" ] && deny "'.claude/.current-agent' is the hook-owned role marker; agents must not write it."
-
-# 1) framework definitions: impl/test/doc agents may never edit them
-if $AGENTDEF && { in_set "$IMPL" || in_set "$TESTER" || in_set "$DOCWRITER"; }; then
-    deny "agent '$AGENT' cannot modify framework definitions ('$REL'). CLAUDE.md / pm-ref.md / agent defs are owned by the human + PM. Report the needed change instead."
-fi
-
-# 2) framework state (task files, handoffs, memory, settings, docs, logs): allow for all
-$FW && exit 0
-
-# 3) product source — apply the role's boundary
 if [ "$AGENT" = "pm-inline" ]; then
-    deny "PM does not implement. Source file '$REL' must be written by the developer agent — spawn it via the Agent tool, or STOP and report. If agent-spawn is unavailable, do NOT write source yourself: tell the user and halt. PM may only edit framework state (.claude/, tasks/, memory/, tz.md, backlog.md)."
+    deny "PM does not implement. Source file '$REL' must be written by the developer agent — spawn it via the Agent tool, or STOP and report. PM may only edit framework state (tasks/, memory/, tz.md, backlog.md, .claude state)."
 fi
 if in_set "$READONLY_NOSRC"; then
-    deny "agent '$AGENT' is read-only / non-implementing per AGENTS.md. It cannot edit source ('$REL'). Report findings to PM; PM delegates the fix to developer."
+    deny "agent '$AGENT' is read-only / non-implementing per AGENTS.md and cannot edit source ('$REL'). Report findings to PM; PM delegates the fix to developer."
 fi
 if in_set "$TESTER"; then
     $TEST && exit 0
-    deny "agent '$AGENT' may only write test files; '$REL' is production source. Report the needed production change to PM (developer implements it)."
+    deny "agent '$AGENT' may only write test files; '$REL' is production source. Report the needed change to PM."
 fi
 if in_set "$DOCWRITER"; then
     $DOC && exit 0
     deny "agent '$AGENT' writes docs only; it cannot change code ('$REL')."
 fi
 
-# IMPL agents and anything unrecognized -> allow (fail open)
+# Impl agents (developer, database-architect, devops, env-manager, refactoring,
+# rapid-prototyper, git-workflow) and any unrecognized agent -> allow (fail open).
 exit 0

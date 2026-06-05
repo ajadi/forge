@@ -654,7 +654,7 @@ def build_proposal(existing_text: str, template_text: str, exfile: str, tpfile: 
     lines.append("## To apply this proposal")
     lines.append("")
     lines.append("```bash")
-    lines.append("bash init-project.sh --apply-proposal")
+    lines.append("bash install.sh --apply-proposal")
     lines.append("```")
     lines.append("")
     return "\n".join(lines)

@@ -30,7 +30,9 @@ CHANGED=$( { git diff --name-only 2>/dev/null; git diff --staged --name-only 2>/
 [ -z "$CHANGED" ] && exit 0
 
 # Framework state / non-product paths — changes here are not "source changes".
-FW_RE='^\.claude/|^tasks/|^memory/|^handoffs/|^docs/|^scripts/|^logs/|^tz\.md$|^backlog\.md$|^manifest\.(md|json)$|^\.gitignore$|^CLAUDE\.md$|^AGENTS\.md$|^pm-ref\.md$|^FORGE-UPGRADE-PROGRESS\.md$|\.log$'
+# (scripts/ is intentionally NOT here: scripts are product code that should be
+# recorded against a task, matching role-write-guard's classification.)
+FW_RE='^\.claude/|^tasks/|^memory/|^handoffs/|^docs/|^logs/|^tz\.md$|^backlog\.md$|^manifest\.(md|json)$|^\.gitignore$|^CLAUDE\.md$|^AGENTS\.md$|^pm-ref\.md$|^FORGE-UPGRADE-PROGRESS\.md$|\.log$'
 
 SOURCE_CHANGED=$(printf '%s\n' "$CHANGED" | grep -vE "$FW_RE")
 [ -z "$SOURCE_CHANGED" ] && exit 0   # only framework state changed → fine
