@@ -70,7 +70,7 @@ if [ "$EST_TOKENS" -ge "$GREP_TOKENS" ]; then
     echo "BLOCKED (coworker-read-gate): '$FILE_PATH' is ~${EST_K}k tokens — too large to read whole."
     echo "Do NOT read the entire file. Either:"
     echo "  - grep for the specific section you need:  grep -n '<pattern>' \"$FILE_PATH\""
-    echo "  - or delegate a targeted question:         coworker ask \"<question about this file>\" --file \"$FILE_PATH\""
+    echo "  - or delegate a targeted question:         coworker ask --paths \"$FILE_PATH\" --question \"<question>\" --allow-code"
     echo "Then continue with the extracted answer. (Source files are exempt from this gate.)"
     exit 2
 fi
@@ -78,7 +78,7 @@ fi
 if [ "$EST_TOKENS" -ge "$DELEGATE_TOKENS" ]; then
     echo "BLOCKED (coworker-read-gate): '$FILE_PATH' is ~${EST_K}k tokens of non-source content."
     echo "Delegate this read to coworker instead of spending reasoning context:"
-    echo "  coworker ask \"summarize / extract what you need from this file\" --file \"$FILE_PATH\""
+    echo "  coworker ask --paths \"$FILE_PATH\" --question \"summarize / extract what you need\" --allow-code"
     echo "Use the returned summary. (Source code is exempt; set COWORKER_READ_GATE=off to disable.)"
     exit 2
 fi

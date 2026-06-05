@@ -5,108 +5,110 @@ to [`coworker`](https://github.com/Arcanada-one/coworker), a cheap-model CLI bac
 **xAI Grok**. This keeps the reasoning model's context for source code.
 
 The `coworker-read-gate` hook (`.claude/hooks/coworker-read-gate.sh`) enforces it on
-the `Read` tool. It **fails open** — if `coworker` is not installed or configured,
-reads are allowed normally — so this setup is optional but recommended.
+the `Read` tool. It **fails open** — if `coworker` is not installed/configured, reads
+are allowed normally — so this setup is optional but recommended.
 
-> Exact flag/field names below may differ by `coworker` version. Confirm against
-> `coworker --help` and the repo README; the structure is what matters.
+> Everything below is verified against `coworker-cli` 0.7.0 (2026-06-05).
 
 ## 1. Install
 
 ```bash
-pip install git+https://github.com/Arcanada-one/coworker
-coworker --version
+pip install "git+https://github.com/Arcanada-one/coworker"   # installs the `coworker` command (+ openai)
+coworker --help        # subcommands: ask, write, stats, debug, rtk
 ```
 
-## 2. API keys — environment variables only
+## 2. API key — environment variable only
 
-**Never commit keys.** Set the xAI key in your shell profile / environment:
+**Never commit keys.** coworker reads the key from the env var named by the provider's
+`env_key` (below). For xAI:
 
 ```bash
-# xAI (Grok) — get a key at https://console.x.ai
-export XAI_API_KEY="xai-..."
+export XAI_API_KEY="xai-..."          # get one at https://console.x.ai
 ```
-
-On Windows (PowerShell), set it as a user environment variable instead:
-
+Windows (PowerShell), persist at user scope:
 ```powershell
 setx XAI_API_KEY "xai-..."
+setx PYTHONUTF8 "1"                    # coworker output/rtk help crash on cp125x consoles without this
+setx PYTHONIOENCODING "utf-8"
+setx COWORKER_DEFAULT_PROVIDER "xai"   # optional: default provider when a profile/flag doesn't set one
 ```
 
-## 3. Providers & profiles
+## 3. Config files (required)
 
-`coworker` reads provider/profile config (typically `~/.coworker/providers.yaml`
-and `profiles.yaml`, or a project-local equivalent). Reference these by name, with
-the actual secret pulled from the env var — no inline keys.
+coworker reads two YAML files from `$XDG_CONFIG_HOME/coworker/` — on Windows that is
+`C:\Users\<you>\.config\coworker\`. Both are required; `ask`/`write` error if missing.
 
-`providers.yaml` (example shape). xAI exposes an OpenAI-compatible API at
-`https://api.x.ai/v1`. Model ids change over time — list what your key can use:
+`providers.yaml` — OpenAI-compatible endpoints; the secret is pulled from `env_key`,
+never inline. List the models a key can use:
 `curl -s https://api.x.ai/v1/models -H "Authorization: Bearer $XAI_API_KEY"`.
-For cheap read/summarize delegation pick a **non-reasoning** chat model. Verified
-working 2026-06-05: `grok-4.20-0309-non-reasoning` (recommended — fast/cheap),
-`grok-4.3` (general), `grok-4.20-0309-reasoning` (reasoning, pricier):
+For cheap read/summarize pick a **non-reasoning** model. Verified 2026-06-05:
+`grok-4.20-0309-non-reasoning` (recommended), `grok-4.3`, `grok-4.20-0309-reasoning`.
 
 ```yaml
-providers:
-  xai:
-    base_url: https://api.x.ai/v1
-    api_key_env: XAI_API_KEY
-    model: grok-4.20-0309-non-reasoning
+xai:
+  base_url: https://api.x.ai/v1
+  env_key: XAI_API_KEY
+  default_model: grok-4.20-0309-non-reasoning
 ```
 
-`profiles.yaml` (example shape — a cheap profile for read/summarize):
+`profiles.yaml` — `system_prompt` + `recommended_provider` per profile (`ask` defaults
+to profile `code`, `write` to `write`). Optional: `default_max_tokens_ask` /
+`default_max_tokens_write`.
 
 ```yaml
-profiles:
-  read:                # used by the read-gate delegation
-    provider: xai
-    max_tokens: 2048
-    temperature: 0
+code:
+  recommended_provider: xai
+  system_prompt: >
+    Answer strictly from the corpus, concise and factual. If it's not in the
+    corpus, say so. Do not invent details.
+write:
+  recommended_provider: xai
+  system_prompt: >
+    Generate the requested file body only — no commentary or code fences unless asked.
 ```
 
-## 4. Signal passthrough (so `git push` doesn't hang)
+Provider resolution order: `--provider` flag → `profile.recommended_provider` →
+`COWORKER_DEFAULT_PROVIDER` → `moonshot` (built-in default).
 
-`coworker`'s real-toolkit (`rtk`) can intercept shell calls. Enable it and allow the
-**signal/no-op commands to pass straight through** — otherwise interactive or
-network commands like `git push` block waiting on the wrapper.
+## 4. Usage
 
 ```bash
-coworker rtk enable
+# Summarize / query a corpus (this is what the read-gate hook tells you to run):
+coworker ask --paths docs/architecture.md --question "summarize the auth flow" --profile code
+
+# Generate a file from a spec + context:
+coworker write --spec "a CONTRIBUTING guide" --context README.md --target CONTRIBUTING.md
+
+coworker stats --since 7d        # token/cost usage
 ```
 
-Passthrough allowlist (commands `coworker` must NOT intercept — they run directly):
+**File gate:** by default `--paths`/`--context` accept only `.md` / `.markdown` / `.txt`.
+For other text (logs, json, csv, yaml) add **`--allow-code`** (or `COWORKER_ALLOW_CODE=1`);
+overrides are logged. The Forge read-gate's suggested command already includes `--allow-code`.
 
-```
-git push
-git pull
-git status
-git rev-parse
-gh pr
-gh release
-gh run
-```
+## 5. Forge integration
 
-Add these to the `rtk` allowlist per `coworker rtk --help` (e.g. an
-`allow:`/`passthrough:` list in the rtk config). Verify with a dry run:
+- The read-gate hook blocks an in-context `Read` of a large non-source file and prints the
+  exact command: `coworker ask --paths "<file>" --question "<question>" --allow-code`.
+- `business-analyst` and `context-summarizer` delegate large non-source reads the same way.
+- Source files are always exempt — the reasoning model reads its own code.
 
-```bash
-git status        # must return immediately, not via the wrapper
-git rev-parse HEAD
-```
+## 6. RTK (optional shell-output compressor)
 
-## 5. How Forge uses it
+`coworker rtk {install,enable,disable,status,passthrough}` manages the **Rust Token Killer**,
+which pipes shell tool output through `rtk` before it reaches Claude Code's context.
 
-- Agents (esp. `business-analyst`, `context-summarizer`) delegate large non-source
-  reads:
-  ```bash
-  coworker ask "summarize the auth flow described here" --file docs/architecture.md
-  ```
-- The read-gate hook blocks an in-context `Read` of a large non-source file and
-  prints the exact `coworker ask` command to run instead.
+- It needs the separate **`rtk` binary** (NOT a pip package): download
+  `rtk-x86_64-pc-windows-msvc.zip` from https://github.com/rtk-ai/rtk/releases and add to
+  PATH, or `cargo install --git https://github.com/rtk-ai/rtk`.
+- `coworker rtk enable` then **edits your live `~/.claude/settings.json`** to register the hook.
+- `coworker rtk passthrough` manages the signal/bulk allowlist (git/gh control commands ship
+  as defaults) so commands like `git push` pass straight through and don't hang.
+- `coworker rtk status` reports binary + hook state.
 
-## 6. Tuning the gate
+RTK is independent of read-delegation — `ask`/`write` work without it.
 
-Environment variables (all optional):
+## 7. Tuning the read-gate (env vars)
 
 | Var | Default | Meaning |
 |-----|---------|---------|

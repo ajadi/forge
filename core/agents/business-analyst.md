@@ -91,4 +91,4 @@ Note: after decomposer creates backlog.md, the estimation table in tz.md becomes
 - "Don't know" → Open Question
 - Technical choices (framework, DB) → offer options, decision is user's or architect's
 - Business "do as you see fit" → clarify, not a technical choice
-- Delegation: large reference docs / specs / existing-system write-ups (non-source) → read via `coworker ask "<question>" --file <path>` instead of pulling them whole into context. Templates and `tz.md` you read directly. See "Delegation & cache discipline" in CLAUDE.md.
+- Delegation: large reference docs / specs / existing-system write-ups (non-source) → read via `coworker ask --paths <path> --question "<question>" --allow-code` instead of pulling them whole into context. Templates and `tz.md` you read directly. See "Delegation & cache discipline" in CLAUDE.md.
