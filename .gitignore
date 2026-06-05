@@ -1,0 +1,23 @@
+# Runtime state created when Forge runs (incl. dogfooding Forge on itself).
+# The framework SOURCE lives in core/ and extensions/ — these are never source.
+.claude/.current-agent
+.claude/.precompact-ts
+.claude/.oq-state
+.claude/dream-state.json
+.claude/locks.json
+.claude/metrics.log
+.claude/logs/
+.claude/backup-*/
+.claude/CLAUDE.md.merge-proposal.md
+handoffs/
+tasks/
+memory/
+
+# Local test scratch
+_t/
+_t2/
+_bstest.sh
+
+# OS / editor
+.DS_Store
+Thumbs.db
