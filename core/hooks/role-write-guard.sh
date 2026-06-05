@@ -77,19 +77,32 @@ fi
 is() { printf '%s' "$rel_l" | grep -qE "$1"; }
 
 FW=false; AGENTDEF=false; TEST=false; DOC=false
-is '^\.claude/|^tasks/|^memory/|^handoffs/|^docs/|^scripts/|^logs/|^tz\.md$|^backlog\.md$|^manifest\.(md|json)$|^\.gitignore$|^claude\.md$|^agents\.md$|^pm-ref\.md$|^forge-upgrade-progress\.md$|locks\.json$|\.log$' && FW=true
-is '^claude\.md$|^pm-ref\.md$|^\.claude/pm-ref\.md$|^\.claude/agents/|^core/agents/|^extensions/[^/]+/agents/|^agents\.md$|^\.claude/agents\.md$' && AGENTDEF=true
+# Framework STATE only — what agents legitimately write during a task. Deliberately
+# NOT docs/, scripts/, logs/ or bare *.log / locks.json: those hold product code in
+# real projects and must not be a blanket allow for read-only roles. (Framework logs
+# and locks live under .claude/, which is covered.)
+is '^\.claude/|^tasks/|^memory/|^handoffs/|^tz\.md$|^backlog\.md$|^manifest\.(md|json)$|^\.gitignore$|^claude\.md$|^agents\.md$|^pm-ref\.md$|^forge-upgrade-progress\.md$' && FW=true
+is '^claude\.md$|^pm-ref\.md$|^\.claude/pm-ref\.md$|^\.claude/agents/|^core/agents/|^extensions/.+/agents/|^agents\.md$|^\.claude/agents\.md$' && AGENTDEF=true
 is '(^|/)(tests?|__tests__|specs?|e2e)/|\.(test|spec)\.[a-z0-9]+$|_test\.[a-z0-9]+$|(^|/)test_[^/]*\.py$' && TEST=true
 is '\.(md|mdx|rst|txt|adoc)$|^docs/' && DOC=true
 
 # --- role sets ---
-READONLY_NOSRC=" pm architect code-reviewer reality-checker business-analyst security-analyst dependency-auditor status handoff-validator accessibility-auditor performance-profiler test-reviewer estimator consilium migration-validator smoke-tester e2e-tester ux-interviewer ui-designer "
-IMPL=" developer database-architect devops env-manager refactoring rapid-prototyper git-workflow decomposer optimizer onboarding dream reflect retro context-summarizer "
+# Roles that must NOT write product source. Includes propose-only / plan-only /
+# memory-only agents (decomposer, optimizer, onboarding, dream, reflect, retro,
+# context-summarizer): their legit writes are framework state (FW), allowed above;
+# they have no business writing product source, so they are NOT in IMPL.
+READONLY_NOSRC=" pm architect code-reviewer reality-checker business-analyst security-analyst dependency-auditor status handoff-validator accessibility-auditor performance-profiler test-reviewer estimator consilium migration-validator smoke-tester e2e-tester ux-interviewer ui-designer decomposer optimizer onboarding dream reflect retro context-summarizer "
+IMPL=" developer database-architect devops env-manager refactoring rapid-prototyper git-workflow "
 TESTER=" unit-tester integration-tester "
 DOCWRITER=" documentation changelog-agent "
 in_set() { case "$1" in *" $AGENT "*) return 0;; *) return 1;; esac; }
 
 deny() { echo "BLOCKED (role-write-guard): $1"; exit 2; }
+
+# The role marker is owned by the SubagentStart hook (log-agent.sh). No agent may
+# write it via Write/Edit — otherwise a read-only role could self-promote to
+# developer and bypass every check below.
+[ "$rel_l" = ".claude/.current-agent" ] && deny "'.claude/.current-agent' is the hook-owned role marker; agents must not write it."
 
 # 1) framework definitions: impl/test/doc agents may never edit them
 if $AGENTDEF && { in_set "$IMPL" || in_set "$TESTER" || in_set "$DOCWRITER"; }; then

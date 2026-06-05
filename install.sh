@@ -291,12 +291,13 @@ install_gitignore() {
   if ! grep -q "^# >>> framework-public-ignore" "$TARGET/.gitignore"; then
     echo "" >> "$TARGET/.gitignore"
     awk '/^# >>> framework-public-ignore/,/^# <<< framework-public-ignore/' \
-      "$FORGE_DIR/core/templates/gitignore.tmpl" >> "$TARGET/.gitignore"
+      "$FORGE_DIR/core/templates/gitignore.tmpl" | tr -d '\r' >> "$TARGET/.gitignore"
     echo "  Updated: .gitignore (added framework-public-ignore block)"
   fi
   # Append individual entries from template that aren't already present
   local added=0
   while IFS= read -r line; do
+    line="${line%$'\r'}"   # strip CR — template may have CRLF endings, else dedup never matches
     [ -z "$line" ] && continue
     [[ "$line" == \#* ]] && continue
     if ! grep -qF -- "$line" "$TARGET/.gitignore" 2>/dev/null; then

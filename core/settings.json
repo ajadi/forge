@@ -111,11 +111,12 @@
     ],
     "PostToolUse": [
       {
-        "matcher": "Agent",
+        "matcher": "Task|Agent|TaskCreate",
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/check-blockers.sh"
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/check-blockers.sh",
+            "timeout": 10
           }
         ]
       }
@@ -137,7 +138,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/stop-check.sh"
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/stop-check.sh",
+            "timeout": 10
           },
           {
             "type": "command",

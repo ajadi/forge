@@ -33,7 +33,7 @@ Read each `memory/*.md` file. Note: empty files, suspiciously large files, and w
 Review recent session history and task handoffs for corrections and pattern notes:
 
 ```bash
-tail -300 handoffs/session-log.md 2>/dev/null
+cat handoffs/precompact-*.md 2>/dev/null | tail -300   # PreCompact state snapshots, if any
 grep -rh "wrong\|outdated\|incorrect\|deprecated\|removed\|renamed\|no longer\|superseded\|stale" memory/ 2>/dev/null | head -50
 grep -rh "correction\|fix\|updated\|changed" memory/ 2>/dev/null | head -30
 ```
