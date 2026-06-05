@@ -40,15 +40,18 @@ and `profiles.yaml`, or a project-local equivalent). Reference these by name, wi
 the actual secret pulled from the env var — no inline keys.
 
 `providers.yaml` (example shape). xAI exposes an OpenAI-compatible API at
-`https://api.x.ai/v1`; confirm the current model id against the xAI docs
-(`grok-4-fast` is the cheap/fast tier; `grok-3-mini` is an alternative):
+`https://api.x.ai/v1`. Model ids change over time — list what your key can use:
+`curl -s https://api.x.ai/v1/models -H "Authorization: Bearer $XAI_API_KEY"`.
+For cheap read/summarize delegation pick a **non-reasoning** chat model. Verified
+working 2026-06-05: `grok-4.20-0309-non-reasoning` (recommended — fast/cheap),
+`grok-4.3` (general), `grok-4.20-0309-reasoning` (reasoning, pricier):
 
 ```yaml
 providers:
   xai:
     base_url: https://api.x.ai/v1
     api_key_env: XAI_API_KEY
-    model: grok-4-fast
+    model: grok-4.20-0309-non-reasoning
 ```
 
 `profiles.yaml` (example shape — a cheap profile for read/summarize):
