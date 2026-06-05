@@ -1,5 +1,5 @@
 #!/bin/bash
-# Forge v2.1 — modular multi-agent framework installer
+# Forge v2.2 — modular multi-agent framework installer
 #
 # Usage:
 #   bash install.sh [target_dir] [--ext ext1,ext2,...] [--all]
@@ -107,7 +107,7 @@ backup_existing() {
   done
   {
     echo "Backup created: $(date)"
-    echo "Forge version: 2.1.0"
+    echo "Forge version: 2.2.0"
     echo "Source: $FORGE_DIR"
     echo "Target: $TARGET"
     echo "Files backed up: $n"
@@ -189,7 +189,7 @@ case "$PRESET" in
   *)          echo "ERROR: unknown preset '$PRESET' (use --list)"; exit 1 ;;
 esac
 
-echo "=== Forge Installer v2.1 ==="
+echo "=== Forge Installer v2.2 ==="
 echo "Source:  $FORGE_DIR"
 echo "Target:  $TARGET"
 echo "Project: $PROJECT_NAME"

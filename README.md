@@ -33,6 +33,11 @@ bash forge/install-global.sh
 After that, in a fresh directory open Claude Code and run `/setup-project` —
 the skill will run `install.sh` for the current folder, no manual download.
 
+> Note: the global install ships only agents/commands/rules/skills. **Hooks and
+> `settings.json` are not installed globally**, so the enforcement + token hooks
+> (`role-write-guard`, `coworker-read-gate`, `contract-reminder`, the PreCompact
+> snapshot) activate only after a per-project `install.sh` / `/setup-project`.
+
 ### Install flags
 
 | Flag | What |
@@ -156,7 +161,7 @@ forge/
   core/                     # Always installed
     AGENTS.md               # Team roster: roles, models, boundaries
     agents/                 # 13 core agents
-    commands/               # 11 slash commands (/f-fix, /f-start, etc.)
+    commands/               # 9 slash commands (/f-fix, /f-start, etc.)
     hooks/                  # Session lifecycle, git validation, metrics
     rules/                  # Modular doctrine: repo-access, commit-policy, production-safety
     scripts/                # switch-repo-access, framework-state-mode, lib/merge_claude_md.py
@@ -175,8 +180,25 @@ forge/
     ext-reflection/         # reflect, dream, optimizer, onboarding, retro
 
   presets/                  # Quick-start configurations
-  domain-examples/          # Example of project-specific agents (VPN domain)
 ```
+
+## Hooks
+
+Installed into `.claude/hooks/` and wired in `.claude/settings.json`. All hooks fail open / never wedge the session.
+
+| Hook | Event | What it does |
+|------|-------|-------------|
+| `session-start.sh` · `detect-gaps.sh` | SessionStart | Load context; warn on missing framework files |
+| `contract-reminder.sh` | UserPromptSubmit | Re-inject the operating contract + active task each turn |
+| `validate-commit.sh` · `validate-push.sh` | PreToolUse(Bash) | Block `--no-verify`, force-push, staged `.env`, etc. |
+| `coworker-read-gate.sh` | PreToolUse(Read) | Delegate large non-source reads to coworker/Grok; source exempt; fails open |
+| `role-write-guard.sh` | PreToolUse(Write\|Edit) | Enforce AGENTS.md boundaries: PM/read-only roles can't edit source; developer can't edit framework defs; testers only touch tests |
+| `check-blockers.sh` | PostToolUse(Agent) | Detect open OQs after an agent runs |
+| `log-agent.sh` | SubagentStart | Audit log + write `.claude/.current-agent` marker (used by the write-guard) |
+| `pre-compact.sh` | PreCompact | Dump full session state to context **and** a durable `handoffs/precompact-<ts>.md`; never blocks |
+| `stop-check.sh` · `session-stop.sh` | Stop | Gate: block stopping mid-pipeline or with unrecorded source changes; log metrics |
+
+**Tuning knobs (env vars):** `COWORKER_READ_GATE=off`, `COWORKER_DELEGATE_TOKENS`, `COWORKER_GREP_TOKENS`, `COWORKER_TOKEN_DIVISOR`, `ROLE_WRITE_GUARD=off`, `ROLE_GUARD_TTL`.
 
 ## Core Agents (always installed)
 
@@ -217,8 +239,8 @@ forge/
 | `/f-hotfix` | Emergency fix bypassing normal pipeline |
 | `/f-ba` | Business analyst — collect requirements |
 | `/f-decompose` | Break feature into tasks |
-| `/f-status` | Show project progress |
-| `/f-next-task` | What to work on next |
+| `/status` | Show project progress (skill) |
+| `/next-task` | What to work on next (skill) |
 | `/f-dream` | Run memory consolidation (audits `memory/*.md`) |
 | `/f-reflect` | Post-task reflection and learning |
 | `/f-spike` | Technical spike to validate hypothesis |
@@ -258,8 +280,8 @@ bash install.sh --list
 # What gets installed
 bash install.sh /my/project --preset full
 #   .claude/agents/        <- 37 agent definitions
-#   .claude/commands/      <- 28 slash commands
-#   .claude/hooks/         <- 9 lifecycle hooks
+#   .claude/commands/      <- 26 slash commands (9 core + 17 ext)
+#   .claude/hooks/         <- 12 lifecycle + guard hooks
 #   .claude/rules/         <- 3 modular doctrine files
 #   .claude/skills/        <- 3 custom skills (next-task, status, setup-project)
 #   .claude/templates/     <- requirement + ADR templates
@@ -283,7 +305,7 @@ you resolve. Use `--rollback` to restore the last backup.
 
 ## Adding Domain-Specific Agents
 
-See `domain-examples/` for how to create project-specific agents. Copy the format:
+To add a project-specific agent, copy the standard agent format:
 
 ```markdown
 ---
@@ -310,9 +332,21 @@ Place in `.claude/agents/` and add a matching command in `.claude/commands/` if 
 
 ## What's New in v2.2
 
-- **MemPalace removed** — memory is now plain `memory/*.md` files only. No MCP server, no `pip install`, no embedding model, no auto-save hooks. The `mempal-save.sh` / `mempal-precompact.sh` hooks and the `mcpServers` block in `settings.json` are gone; `install.sh` no longer installs or registers anything Python-side beyond an optional `CLAUDE.md` merge.
+**Memory: flat-file, MemPalace removed**
+- Memory is now plain `memory/*.md` files only. No MCP server, no `pip install`, no embedding model, no auto-save hooks. The `mempal-save.sh` / `mempal-precompact.sh` hooks and the `mcpServers` block in `settings.json` are gone; `install.sh` no longer installs or registers anything Python-side beyond an optional `CLAUDE.md` merge.
 - **dream / retro / reflect / onboarding** rewritten to read and append `memory/*.md` directly (grep + edit), marking superseded facts `~~strikethrough~~` instead of invalidating graph relationships.
-- **Python is now optional** — only used to merge an existing `CLAUDE.md` / `settings.json` on install.
+- Python is now optional — only used to merge an existing `CLAUDE.md` / `settings.json` on install.
+
+**Compaction that doesn't lose data**
+- The old MemPalace `pre-compact` hook *blocked* compaction until an external save succeeded — fragile, and it used to wedge. Removed. `pre-compact.sh` now never blocks (always exits 0) and writes a full state snapshot (in-progress tasks, modified files, open OQs, locks, operating contract) to **both** the compaction context **and** a durable `handoffs/precompact-<ts>.md` file — recoverable even if the summary drops it.
+
+**Token economy: read-delegation (coworker / Grok)**
+- New `coworker-read-gate.sh` (PreToolUse `Read`): large non-source reads (docs/logs/boilerplate) are delegated to the cheap `coworker` model (xAI Grok) or forced to grep-only; **source files are exempt**; **fails open** if `coworker` isn't installed. See `docs/coworker-setup.md`. Keeps the reasoning model's context for code.
+
+**Enforced role boundaries (no more pipeline drift)**
+- `AGENTS.md` declared "PM never implements / reviewers read-only / developer can't touch framework defs" but nothing enforced it. New `role-write-guard.sh` (PreToolUse `Write|Edit`) **mechanically blocks** those writes: PM-inline and read-only roles cannot edit product source; developer cannot edit `CLAUDE.md` / `pm-ref.md` / agent defs; unit-tester only touches test files. The PM inline-fallback that used to "implement itself" is removed.
+- `contract-reminder.sh` (UserPromptSubmit) re-injects a one-line operating contract + the active task each turn, so discipline doesn't drift over long sessions.
+- `stop-check.sh` upgraded from a nudge to a gate: blocks stopping when a task is mid-pipeline, or when product source changed but no task/backlog progress was recorded.
 
 ## What's New in v2.1
 

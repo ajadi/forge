@@ -1,26 +1,46 @@
 #!/usr/bin/env bash
 # stop-check.sh
-# Runs at end of every agent turn (Stop hook).
-# Reads stdin JSON, checks if task is incomplete, nudges Claude to continue.
+# Stop hook. Hard gate: don't let the turn end mid-pipeline or with uncommitted
+# source changes that were never recorded against a task / the backlog.
+# Block convention: message on stdout, exit 2 to block the stop. FAILS OPEN.
+set +e
 
 INPUT=$(cat)
 
-# If stop_hook_active is true — Claude already tried to continue, don't loop
-if echo "$INPUT" | grep -q '"stop_hook_active":true'; then
-    exit 0
-fi
+# If we already blocked once this turn, don't loop.
+echo "$INPUT" | grep -q '"stop_hook_active":true' && exit 0
 
-# Check if any task file has in_progress status without a reality-checker section
-# This catches cases where Claude stopped mid-pipeline
+# --- Gate 1: a task is in_progress but never reached reality-check ---
 if [ -d "tasks" ]; then
     for file in tasks/TASK-*.md; do
         [ -f "$file" ] || continue
         if grep -q "status: in_progress" "$file" && ! grep -qi "## reality" "$file"; then
-            basename_file=$(basename "$file")
-            echo "Task $basename_file is in_progress but pipeline incomplete. Continue the pipeline."
-            exit 1
+            echo "Task $(basename "$file") is in_progress but the pipeline is incomplete (no reality-check). Continue the pipeline before stopping."
+            exit 2
         fi
     done
 fi
 
-exit 0
+# --- Gate 2: product source changed in the working tree, but no task/backlog progress recorded ---
+command -v git >/dev/null 2>&1 || exit 0
+git rev-parse --is-inside-work-tree >/dev/null 2>&1 || exit 0
+
+CHANGED=$( { git diff --name-only 2>/dev/null; git diff --staged --name-only 2>/dev/null; \
+            git ls-files --others --exclude-standard 2>/dev/null; } | sort -u )
+[ -z "$CHANGED" ] && exit 0
+
+# Framework state / non-product paths — changes here are not "source changes".
+FW_RE='^\.claude/|^tasks/|^memory/|^handoffs/|^docs/|^scripts/|^logs/|^tz\.md$|^backlog\.md$|^manifest\.(md|json)$|^\.gitignore$|^CLAUDE\.md$|^AGENTS\.md$|^pm-ref\.md$|^FORGE-UPGRADE-PROGRESS\.md$|\.log$'
+
+SOURCE_CHANGED=$(printf '%s\n' "$CHANGED" | grep -vE "$FW_RE")
+[ -z "$SOURCE_CHANGED" ] && exit 0   # only framework state changed → fine
+
+# Progress is "recorded" if backlog.md or a task file is among the changes.
+if printf '%s\n' "$CHANGED" | grep -qE '^backlog\.md$|^tasks/TASK-.*\.md$'; then
+    exit 0
+fi
+
+echo "Uncommitted source changes exist but no task was advanced and backlog.md was not updated:"
+printf '%s\n' "$SOURCE_CHANGED" | sed 's/^/  - /' | head -20
+echo "Record progress (update the task file + backlog.md) or commit via the pipeline before stopping."
+exit 2

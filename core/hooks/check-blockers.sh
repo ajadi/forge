@@ -16,6 +16,7 @@ if [ "$current_oq" -gt "$previous_oq" ]; then
 fi
 
 # Update state
-echo "$current_oq" > .claude/.oq-state
+mkdir -p .claude 2>/dev/null
+echo "$current_oq" > .claude/.oq-state 2>/dev/null
 
 exit 0

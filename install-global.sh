@@ -14,6 +14,12 @@
 #   - Copies the setup-project skill so /setup-project becomes available
 #     in any project that opens Claude Code with this global layer loaded.
 #
+# NOT installed globally: hooks/ and settings.json. The enforcement + token
+# hooks (role-write-guard, coworker-read-gate, contract-reminder, the guards and
+# the PreCompact snapshot) and their wiring live in settings.json and only take
+# effect after a PER-PROJECT install (`install.sh` / `/setup-project`). The
+# global layer is just the agent/command/skill/rule bootstrap.
+#
 # After install, in any new directory:
 #   mkdir my-new-project && cd my-new-project
 #   # In Claude Code:  /setup-project   (or just say "set up the framework")
@@ -111,5 +117,9 @@ echo "Next steps:"
 echo "  1. In any new project directory, open Claude Code."
 echo "  2. Run /setup-project (or say 'set up forge') — the skill will run"
 echo "     install.sh from $FORGE_DIR for the current directory."
+echo ""
+echo "NOTE: hooks + settings.json are NOT installed globally. Enforcement hooks"
+echo "      (role-write-guard, coworker-read-gate, contract-reminder, etc.) only"
+echo "      activate after a per-project install.sh / /setup-project."
 echo ""
 echo "Rollback: bash install-global.sh --rollback"

@@ -42,6 +42,8 @@ These files don't belong in git regardless of mode:
 - `credentials.json`, `secrets/`, `*secret*`
 - `.claude/settings.local.json`
 - `.claude/locks.json` — runtime lock state
+- `.claude/.current-agent`, `.claude/.precompact-ts`, `.claude/.oq-state` — runtime hook markers
+- `.claude/dream-state.json` — dream scheduler state
 - `.claude/metrics.log`, `.claude/logs/`
 - `.claude/backup-*/`
 - `.claude/CLAUDE.md.merge-proposal.md`

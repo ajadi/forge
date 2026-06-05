@@ -3,7 +3,7 @@
 # Best for: team projects, web apps, APIs
 
 agents: core (all 13)
-commands: core (all 11)
-hooks: all core hooks
+commands: core (all 9)
+hooks: all core hooks (12)
 extensions: ext-security (recommended)
 pipeline: L1 through L4

@@ -39,8 +39,10 @@ else
 fi
 [ -z "$FILE_PATH" ] && exit 0
 
-# Normalize Windows backslashes so Git Bash can stat the file.
-NORM_PATH="${FILE_PATH//\\//}"
+# Normalize Windows backslashes so Git Bash can stat the file (tr '\134'='\',
+# then squeeze repeated slashes so the jq and grep-fallback forms — the latter
+# yields JSON-escaped doubled backslashes — normalize identically).
+NORM_PATH=$(printf '%s' "$FILE_PATH" | tr '\134' '/' | tr -s '/')
 [ -f "$NORM_PATH" ] || exit 0
 
 # --- classify source vs non-source by extension ---

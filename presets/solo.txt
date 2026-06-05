@@ -3,6 +3,6 @@
 # Best for: solo projects, quick fixes, small apps
 
 agents: pm, developer, reality-checker
-commands: f-fix, f-hotfix, f-start, f-status
-hooks: session-start, session-stop, validate-commit
+commands: f-fix, f-hotfix, f-start  (+ status, next-task skills)
+hooks: all core hooks (incl. role-write-guard, coworker-read-gate, contract-reminder)
 pipeline: L1 and L2 only (L3+ requires more agents)

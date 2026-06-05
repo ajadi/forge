@@ -1,14 +1,32 @@
 #!/bin/bash
-# PreCompact hook: Dump session state before context compression
-# Critical state must survive summarization
+# PreCompact hook: dump session state before context compression so nothing
+# valuable is lost to summarization.
+#
+# Two safety nets:
+#   1. Everything is printed to STDOUT (PreCompact hook output is fed into the
+#      compaction so the summarizer sees it).
+#   2. The SAME snapshot is written to a durable file on disk
+#      (handoffs/precompact-<ts>.md). Even if the summary drops it, the agent can
+#      recover full state by reading that file after compaction.
+#
+# This hook NEVER blocks compaction (always exit 0). The old MemPalace
+# pre-compact hook blocked compaction until an external save succeeded — that is
+# exactly what used to wedge compaction, and it is gone.
 set +e
 
-echo "=== SESSION STATE BEFORE COMPACTION ==="
-echo "Timestamp: $(date)"
+mkdir -p "handoffs" 2>/dev/null
+TS=$(date +%Y%m%d_%H%M%S)
+SNAP="handoffs/precompact-${TS}.md"
+
+# emit: write a line to BOTH stdout and the durable snapshot file.
+emit() { printf '%s\n' "$*"; printf '%s\n' "$*" >> "$SNAP" 2>/dev/null; }
+
+emit "=== SESSION STATE BEFORE COMPACTION ==="
+emit "Timestamp: $(date)"
 
 # --- In-progress tasks ---
-echo ""
-echo "## In-Progress Tasks"
+emit ""
+emit "## In-Progress Tasks"
 IN_PROGRESS_FOUND=false
 for f in tasks/TASK-*.md; do
     [ -f "$f" ] || continue
@@ -16,53 +34,61 @@ for f in tasks/TASK-*.md; do
         IN_PROGRESS_FOUND=true
         TASK_NAME=$(head -1 "$f" | sed 's/^# //')
         LAST_SECTION=$(grep '^## ' "$f" | tail -1)
-        echo "  $f — $TASK_NAME"
-        echo "    Last section: $LAST_SECTION"
+        emit "  $f — $TASK_NAME"
+        emit "    Last section: $LAST_SECTION"
     fi
 done
-[ "$IN_PROGRESS_FOUND" = false ] && echo "  (none)"
+[ "$IN_PROGRESS_FOUND" = false ] && emit "  (none)"
 
 # --- Files modified this session ---
-echo ""
-echo "## Modified Files (git working tree)"
+emit ""
+emit "## Modified Files (git working tree)"
 CHANGED=$(git diff --name-only 2>/dev/null)
 STAGED=$(git diff --staged --name-only 2>/dev/null)
 UNTRACKED=$(git ls-files --others --exclude-standard 2>/dev/null)
-
-[ -n "$STAGED" ]    && echo "$STAGED"    | while read -r f; do echo "  [staged]   $f"; done
-[ -n "$CHANGED" ]   && echo "$CHANGED"   | while read -r f; do echo "  [unstaged] $f"; done
-[ -n "$UNTRACKED" ] && echo "$UNTRACKED" | while read -r f; do echo "  [new]      $f"; done
-[ -z "$CHANGED" ] && [ -z "$STAGED" ] && [ -z "$UNTRACKED" ] && echo "  (clean)"
+[ -n "$STAGED" ]    && while read -r f; do [ -n "$f" ] && emit "  [staged]   $f"; done <<< "$STAGED"
+[ -n "$CHANGED" ]   && while read -r f; do [ -n "$f" ] && emit "  [unstaged] $f"; done <<< "$CHANGED"
+[ -n "$UNTRACKED" ] && while read -r f; do [ -n "$f" ] && emit "  [new]      $f"; done <<< "$UNTRACKED"
+[ -z "$CHANGED" ] && [ -z "$STAGED" ] && [ -z "$UNTRACKED" ] && emit "  (clean)"
 
 # --- Open OQs ---
-echo ""
-echo "## Open Questions (tz.md)"
+emit ""
+emit "## Open Questions (tz.md)"
 if [ -f "tz.md" ]; then
     OQ_LINES=$(grep -n '⏳ open' tz.md 2>/dev/null)
     if [ -n "$OQ_LINES" ]; then
-        echo "$OQ_LINES" | while read -r line; do echo "  $line"; done
+        while read -r line; do [ -n "$line" ] && emit "  $line"; done <<< "$OQ_LINES"
     else
-        echo "  (none)"
+        emit "  (none)"
     fi
 else
-    echo "  (tz.md not found)"
+    emit "  (tz.md not found)"
 fi
 
 # --- Locked files ---
-echo ""
-echo "## Locked Files (locks.json)"
+emit ""
+emit "## Locked Files (locks.json)"
 if [ -f "locks.json" ]; then
-    cat locks.json 2>/dev/null
+    while read -r line; do emit "  $line"; done < "locks.json"
+elif [ -f ".claude/locks.json" ]; then
+    while read -r line; do emit "  $line"; done < ".claude/locks.json"
 else
-    echo "  (none)"
+    emit "  (none)"
 fi
 
-# --- Log compaction event ---
-mkdir -p "handoffs" 2>/dev/null
-echo "Compaction at $(date)" >> "handoffs/compaction-log.txt" 2>/dev/null
+# --- Recovery + operating contract (survives compaction) ---
+emit ""
+emit "## Recovery"
+emit "Full snapshot saved to: $SNAP — read it to restore state if anything is missing."
+emit "After compaction: check in-progress tasks above and continue the pipeline."
+emit ""
+emit "## Operating contract (survives compaction)"
+emit "- PM orchestrates and delegates; PM NEVER writes source itself (enforced by role-write-guard.sh)."
+emit "- Source edits go through the developer agent only. code-reviewer / architect / reality-checker are read-only."
+emit "- Pass file paths between agents, never file contents. Each agent appends its own handoff section."
+emit "- Every task ends through reality-check; record progress in tasks/ + backlog.md before stopping."
+emit "- Memory is flat files: grep memory/*.md before stating project facts; append, mark stale with ~~strikethrough~~."
+emit "=== END SESSION STATE ==="
 
-echo ""
-echo "## Recovery"
-echo "After compaction: check in-progress tasks above and continue pipeline."
-echo "=== END SESSION STATE ==="
+echo "Compaction at $(date) -> $SNAP" >> "handoffs/compaction-log.txt" 2>/dev/null
 exit 0
