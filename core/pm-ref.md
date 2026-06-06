@@ -69,7 +69,7 @@ description:
 
 ## Handoff contract (mandatory)
 
-Every agent appends after its work:
+Terse, structured, **English only** — the fields below and nothing else: no narrative prose, no pleasantries, no task restatement. Every agent appends after its work:
 ```markdown
 ## handoff: [agent_name]
 status: DONE | NEEDS_WORK | BLOCKED

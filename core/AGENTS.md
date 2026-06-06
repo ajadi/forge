@@ -77,7 +77,7 @@
 
 ## Handoff Contract
 
-Every agent appends a standardized handoff section to the task file:
+Terse, structured, **English only** — the fields below and nothing else (no narrative prose, no pleasantries, no task restatement). Every agent appends a standardized handoff section to the task file:
 
 ```markdown
 ## handoff: [agent_name]
