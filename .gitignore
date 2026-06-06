@@ -6,6 +6,7 @@
 .claude/dream-state.json
 .claude/locks.json
 .claude/metrics.log
+.claude/progress.log
 .claude/logs/
 .claude/backup-*/
 .claude/CLAUDE.md.merge-proposal.md
@@ -16,6 +17,8 @@ memory/
 # Local test scratch
 _t/
 _t2/
+_qa*/
+_itest/
 _bstest.sh
 
 # OS / editor
