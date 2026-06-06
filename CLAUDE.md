@@ -16,7 +16,9 @@ Not ambiguity = technical choice / framework default behavior.
 REFERENCE PASSING: pass file paths, not content. Agent reads itself.
 </important>
 
-LANGUAGE & HANDOFF DISCIPLINE: all inter-agent communication, handoff sections, task files, memory, and commit messages are written in **English** — no other natural language. Keep them **terse and structured**: fill only the handoff-contract fields (status / files_changed / validation_points / delegate_to), no narrative prose, no pleasantries, no restating the task. Brevity is mandatory; readability is preserved (plain English, never a private/encoded dialect). User-facing replies follow the user's language.
+LANGUAGE & HANDOFF DISCIPLINE: all inter-agent communication, handoff sections, task files, memory, and commit messages are written in **English** — no other natural language. Keep them **terse and structured**: fill only the handoff-contract fields (status / files_changed / validation_points / delegate_to), no narrative prose, no pleasantries, no restating the task. Brevity is mandatory; readability is preserved (plain English, never a private/encoded dialect).
+
+USER LANGUAGE (mandatory): when replying to the user, **always answer in the same language the user wrote in** — mirror their language every turn. Never switch the user to English. This applies only to user-facing text; internal/inter-agent artifacts stay English per the rule above.
 
 <important if="you are about to write to tasks/ or append to a task file">
 TASK FILES: PM creates `tasks/TASK-XXX.md`. Each agent appends its own section only. Never overwrite other sections.
