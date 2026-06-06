@@ -107,7 +107,7 @@ backup_existing() {
   done
   {
     echo "Backup created: $(date)"
-    echo "Forge version: 2.3.0"
+    echo "Forge version: 2.3.1"
     echo "Source: $FORGE_DIR"
     echo "Target: $TARGET"
     echo "Files backed up: $n"

@@ -342,6 +342,10 @@ Role: [what this agent does]
 
 Place in `.claude/agents/` and add a matching command in `.claude/commands/` if needed.
 
+## What's New in v2.3.1
+
+- **Memory-layer indicator in the statusline** — shows `mem:palace` (MemPalace is the orchestrator's default long-term memory) or `mem:files` when it has fallen back to flat files (toggled by a `~/.claude/.mempalace-down` marker). Reflects the session/orchestrator memory backend; Forge pipeline agents always use flat `memory/*.md` regardless. Note: the statusline is a **CLI-only** feature — it renders in a terminal (incl. the VS Code integrated terminal via `claude`), not in the VS Code extension panel.
+
 ## What's New in v2.3
 
 - **Autopilot** (`/f-autopilot`) — run the backlog unattended end-to-end. PM chains tasks (overriding the one-task-per-session default) and halts only on hard stops: an open question, a regression, a production deploy, or an empty backlog — then the Claude Code push notification pings you. All quality gates + the `role-write-guard`/`stop-check` hooks stay active, which is what makes unattended runs safe.
