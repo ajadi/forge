@@ -1,16 +1,16 @@
 ---
-name: setup-project
-description: Bootstrap Forge into the current project directory. Use when the user opens Claude Code in a fresh folder and says "set up forge" / "поставь фреймворк" / "setup project" / "/setup-project". Detects forge checkout via ~/.claude/.forge-checkout pointer (written by install-global.sh) and runs install.sh against $PWD.
+name: f-setup-project
+description: Bootstrap Forge into the current project directory. Use when the user opens Claude Code in a fresh folder and says "set up forge" / "поставь фреймворк" / "setup project" / "/f-setup-project". Detects forge checkout via ~/.claude/.forge-checkout pointer (written by install-global.sh) and runs install.sh against $PWD.
 ---
 
-# /setup-project
+# /f-setup-project
 
 ## When to use
 
 User just opened Claude Code in a directory that has no `.claude/` yet, or
 explicitly asks to install Forge. Triggers:
 
-- `/setup-project`
+- `/f-setup-project`
 - "set up forge" / "поставь фреймворк" / "новый проект"
 - "install the framework here"
 

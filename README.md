@@ -30,13 +30,13 @@ Install Forge once into `~/.claude/` so it's available in any project:
 bash forge/install-global.sh
 ```
 
-After that, in a fresh directory open Claude Code and run `/setup-project` —
+After that, in a fresh directory open Claude Code and run `/f-setup-project` —
 the skill will run `install.sh` for the current folder, no manual download.
 
 > Note: the global install ships only agents/commands/rules/skills. **Hooks and
 > `settings.json` are not installed globally**, so the enforcement + token hooks
 > (`role-write-guard`, `coworker-read-gate`, `contract-reminder`, the PreCompact
-> snapshot) activate only after a per-project `install.sh` / `/setup-project`.
+> snapshot) activate only after a per-project `install.sh` / `/f-setup-project`.
 
 ### Install flags
 
@@ -165,7 +165,7 @@ forge/
     hooks/                  # Session lifecycle, git validation, metrics
     rules/                  # Modular doctrine: repo-access, commit-policy, production-safety
     scripts/                # switch-repo-access, framework-state-mode, lib/merge_claude_md.py
-    skills/                 # next-task, status, setup-project
+    skills/                 # next-task, status, f-setup-project
     templates/              # tz-template, adr-template, manifest.md.tmpl, gitignore.tmpl
     pm-ref.md               # Pipeline reference
     settings.json           # Base permissions, hooks
@@ -283,7 +283,7 @@ bash install.sh /my/project --preset full
 #   .claude/commands/      <- 26 slash commands (9 core + 17 ext)
 #   .claude/hooks/         <- 12 lifecycle + guard hooks
 #   .claude/rules/         <- 3 modular doctrine files
-#   .claude/skills/        <- 3 custom skills (next-task, status, setup-project)
+#   .claude/skills/        <- 3 custom skills (next-task, status, f-setup-project)
 #   .claude/templates/     <- requirement + ADR templates
 #   .claude/AGENTS.md      <- team roster
 #   .claude/pm-ref.md      <- pipeline reference
@@ -371,7 +371,7 @@ Place in `.claude/agents/` and add a matching command in `.claude/commands/` if 
 **Global install**
 
 - **`install-global.sh`** copies core into `~/.claude/` additively (won't clobber your custom agents/skills) and stashes a checkout pointer at `~/.claude/.forge-checkout`.
-- **`/setup-project` skill** — in any fresh directory, open Claude Code and run `/setup-project`; the skill reads the pointer and runs `install.sh` for the current folder.
+- **`/f-setup-project` skill** — in any fresh directory, open Claude Code and run `/f-setup-project`; the skill reads the pointer and runs `install.sh` for the current folder.
 
 **Windows polish**
 

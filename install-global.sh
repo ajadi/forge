@@ -11,18 +11,18 @@
 #   - Copies core/agents, core/commands, core/skills, core/rules into
 #     ~/.claude/{agents,commands,skills,rules}/ (additive — won't clobber
 #     files you already have unless name collides).
-#   - Copies the setup-project skill so /setup-project becomes available
+#   - Copies the f-setup-project skill so /f-setup-project becomes available
 #     in any project that opens Claude Code with this global layer loaded.
 #
 # NOT installed globally: hooks/ and settings.json. The enforcement + token
 # hooks (role-write-guard, coworker-read-gate, contract-reminder, the guards and
 # the PreCompact snapshot) and their wiring live in settings.json and only take
-# effect after a PER-PROJECT install (`install.sh` / `/setup-project`). The
+# effect after a PER-PROJECT install (`install.sh` / `/f-setup-project`). The
 # global layer is just the agent/command/skill/rule bootstrap.
 #
 # After install, in any new directory:
 #   mkdir my-new-project && cd my-new-project
-#   # In Claude Code:  /setup-project   (or just say "set up the framework")
+#   # In Claude Code:  /f-setup-project   (or just say "set up the framework")
 
 set -uo pipefail
 
@@ -106,7 +106,7 @@ echo ""
 echo "[skills]"
 copy_additive "$FORGE_DIR/core/skills"   "$GLOBAL_DIR/skills"
 
-# Stash a pointer to forge checkout so /setup-project can find it
+# Stash a pointer to forge checkout so /f-setup-project can find it
 echo "$FORGE_DIR" > "$GLOBAL_DIR/.forge-checkout"
 
 echo ""
@@ -115,11 +115,11 @@ echo "Forge checkout pointer: $GLOBAL_DIR/.forge-checkout"
 echo ""
 echo "Next steps:"
 echo "  1. In any new project directory, open Claude Code."
-echo "  2. Run /setup-project (or say 'set up forge') — the skill will run"
+echo "  2. Run /f-setup-project (or say 'set up forge') — the skill will run"
 echo "     install.sh from $FORGE_DIR for the current directory."
 echo ""
 echo "NOTE: hooks + settings.json are NOT installed globally. Enforcement hooks"
 echo "      (role-write-guard, coworker-read-gate, contract-reminder, etc.) only"
-echo "      activate after a per-project install.sh / /setup-project."
+echo "      activate after a per-project install.sh / /f-setup-project."
 echo ""
 echo "Rollback: bash install-global.sh --rollback"
