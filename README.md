@@ -37,6 +37,11 @@ bash forge/install-global.sh
 After that, in a fresh directory open Claude Code and run `/f-setup-project` —
 the skill will run `install.sh` for the current folder, no manual download.
 
+After pulling a new Forge version, refresh the global layer with
+`bash forge/install-global.sh --update` — it overwrites Forge's own
+agents/commands/rules/skills with the current version and leaves your custom
+files untouched. (Plain `install-global.sh` skips anything that already exists.)
+
 > Note: the global install ships only agents/commands/rules/skills. **Hooks and
 > `settings.json` are not installed globally**, so the enforcement + token hooks
 > (`role-write-guard`, `coworker-read-gate`, `contract-reminder`, the PreCompact

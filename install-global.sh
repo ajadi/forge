@@ -3,14 +3,18 @@
 # in any directory without a per-project install.
 #
 # Usage:
-#   bash install-global.sh           # install
+#   bash install-global.sh            # install (skip files that already exist)
+#   bash install-global.sh --update   # refresh: overwrite Forge's OWN files with
+#                                      #   the current version; your customs are kept
 #   bash install-global.sh --rollback # restore previous ~/.claude/
 #
 # What it does:
 #   - Backs up ~/.claude/ to ~/.claude/.backup-TIMESTAMP/.
 #   - Copies core/agents, core/commands, core/skills, core/rules into
-#     ~/.claude/{agents,commands,skills,rules}/ (additive — won't clobber
-#     files you already have unless name collides).
+#     ~/.claude/{agents,commands,skills,rules}/. Default is additive (won't touch
+#     files that already exist). With --update, files that ALSO ship in Forge core
+#     are overwritten with the current version; files unique to you are never
+#     visited (they're not in the source), so customs survive either way.
 #   - Copies the f-setup-project skill so /f-setup-project becomes available
 #     in any project that opens Claude Code with this global layer loaded.
 #
@@ -32,9 +36,11 @@ BACKUP_TAG=$(date +%Y%m%d-%H%M%S)
 BACKUP_DIR="$GLOBAL_DIR/.backup-$BACKUP_TAG"
 
 DO_ROLLBACK=false
+DO_UPDATE=false
 for arg in "$@"; do
   case "$arg" in
     --rollback) DO_ROLLBACK=true ;;
+    --update)   DO_UPDATE=true ;;
   esac
 done
 
@@ -62,6 +68,7 @@ fi
 echo "=== Forge global install ==="
 echo "Source:      $FORGE_DIR"
 echo "Destination: $GLOBAL_DIR"
+$DO_UPDATE && echo "Mode:        --update (overwrite Forge's own files; customs kept)"
 echo ""
 
 mkdir -p "$GLOBAL_DIR"/{agents,commands,skills,rules}
@@ -77,15 +84,20 @@ for sub in agents commands skills rules; do
 done
 echo "Backed up $n existing dir(s) to $BACKUP_DIR"
 
-# Additive copy — by file (so user customs aren't deleted)
+# Copy by file. Default: skip existing (protect user customs). With --update:
+# overwrite — these are Forge's own files; files unique to you aren't in $src so
+# this loop never visits them, and they survive regardless.
 copy_additive() {
   local src="$1" dst="$2"
   [ -d "$src" ] || return 0
   for f in "$src"/*; do
     [ -e "$f" ] || continue
     base=$(basename "$f")
-    if [ -e "$dst/$base" ]; then
+    if [ -e "$dst/$base" ] && ! $DO_UPDATE; then
       echo "  skipped (exists): $dst/$base"
+    elif [ -e "$dst/$base" ]; then
+      cp -r "$f" "$dst/"
+      echo "  updated: $dst/$base"
     else
       cp -r "$f" "$dst/"
       echo "  copied: $dst/$base"
@@ -122,4 +134,5 @@ echo "NOTE: hooks + settings.json are NOT installed globally. Enforcement hooks"
 echo "      (role-write-guard, coworker-read-gate, contract-reminder, etc.) only"
 echo "      activate after a per-project install.sh / /f-setup-project."
 echo ""
+echo "Refresh after a Forge upgrade: bash install-global.sh --update"
 echo "Rollback: bash install-global.sh --rollback"
