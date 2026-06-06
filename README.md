@@ -1,6 +1,6 @@
 # Forge
 
-Modular multi-agent development framework for [Claude Code](https://docs.anthropic.com/en/docs/claude-code). **Version 2.2.**
+Modular multi-agent development framework for [Claude Code](https://docs.anthropic.com/en/docs/claude-code). **Version 2.3.**
 
 Forge turns Claude Code into a full dev team: PM orchestrates, agents implement, review, test, and deploy. Three things keep it from drifting or running up cost:
 
@@ -166,7 +166,7 @@ forge/
   core/                     # Always installed
     AGENTS.md               # Team roster: roles, models, boundaries
     agents/                 # 13 core agents
-    commands/               # 9 slash commands (/f-fix, /f-start, etc.)
+    commands/               # 10 slash commands (/f-fix, /f-start, /f-autopilot, etc.)
     hooks/                  # Session lifecycle, git validation, metrics
     rules/                  # Modular doctrine: repo-access, commit-policy, production-safety
     scripts/                # switch-repo-access, framework-state-mode, lib/merge_claude_md.py
@@ -198,8 +198,9 @@ Installed into `.claude/hooks/` and wired in `.claude/settings.json`. All hooks 
 | `validate-commit.sh` · `validate-push.sh` | PreToolUse(Bash) | Block `--no-verify`, force-push, staged `.env`, etc. |
 | `coworker-read-gate.sh` | PreToolUse(Read) | Delegate large non-source reads to coworker/Grok; source exempt; fails open |
 | `role-write-guard.sh` | PreToolUse(Write\|Edit) | Enforce AGENTS.md boundaries: PM/read-only roles can't edit source; developer can't edit framework defs; testers only touch tests |
-| `check-blockers.sh` | PostToolUse(Agent) | Detect open OQs after an agent runs |
-| `log-agent.sh` | SubagentStart | Audit log + write `.claude/.current-agent` marker (used by the write-guard) |
+| `check-blockers.sh` | PostToolUse(Task) | Detect open OQs after an agent runs |
+| `grok-watch.sh` | PostToolUse(Bash) | Detect "out of credits" on coworker/Grok calls → flag 🟥 + record Grok activity for the statusline |
+| `log-agent.sh` | SubagentStart | Audit log + write `.claude/.current-agent` marker — agent **and model** (used by the write-guard and the statusline) |
 | `pre-compact.sh` | PreCompact | Dump full session state to context **and** a durable `handoffs/precompact-<ts>.md`; never blocks |
 | `stop-check.sh` · `session-stop.sh` | Stop | Gate: block stopping mid-pipeline or with unrecorded source changes; log metrics |
 
@@ -252,6 +253,7 @@ Installed into `.claude/hooks/` and wired in `.claude/settings.json`. All hooks 
 | `/f-new-task` | Create a new task file |
 | `/f-scope-check` | Check for scope creep vs tz.md |
 | `/f-bug-report` | Structured bug report |
+| `/f-autopilot` | Run the backlog unattended end-to-end; halts only on questions/regressions/deploys, then pushes you |
 
 ## Autonomy Ladder
 
@@ -285,8 +287,8 @@ bash install.sh --list
 # What gets installed
 bash install.sh /my/project --preset full
 #   .claude/agents/        <- 37 agent definitions
-#   .claude/commands/      <- 26 slash commands (9 core + 17 ext)
-#   .claude/hooks/         <- 12 lifecycle + guard hooks
+#   .claude/commands/      <- 27 slash commands (10 core + 17 ext)
+#   .claude/hooks/         <- 13 lifecycle + guard hooks
 #   .claude/rules/         <- 3 modular doctrine files
 #   .claude/skills/        <- 3 custom skills (next-task, status, f-setup-project)
 #   .claude/templates/     <- requirement + ADR templates
@@ -334,6 +336,12 @@ Role: [what this agent does]
 ```
 
 Place in `.claude/agents/` and add a matching command in `.claude/commands/` if needed.
+
+## What's New in v2.3
+
+- **Autopilot** (`/f-autopilot`) — run the backlog unattended end-to-end. PM chains tasks (overriding the one-task-per-session default) and halts only on hard stops: an open question, a regression, a production deploy, or an empty backlog — then the Claude Code push notification pings you. All quality gates + the `role-write-guard`/`stop-check` hooks stay active, which is what makes unattended runs safe.
+- **Model visibility** — `log-agent.sh` records each subagent's model; the statusline shows the active agent and its model (`▸developer·sonnet`), so you can see which model is working at any moment.
+- **Grok out-of-credits alert** — xAI exposes no balance API, so `grok-watch.sh` (PostToolUse) detects the billing error when a `coworker` call fails, flags it (🟥 `grok:NO-CREDITS` in the statusline + a banner), and the read-gate stops suggesting delegation until you top up (reads fall back to the main model). Recovers automatically on the next successful coworker call.
 
 ## What's New in v2.2
 

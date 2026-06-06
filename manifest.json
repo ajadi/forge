@@ -1,6 +1,6 @@
 {
   "name": "forge",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "description": "Modular multi-agent development framework for Claude Code",
   "core": {
     "agents": [
@@ -10,12 +10,12 @@
     ],
     "commands": [
       "f-start", "f-new-task", "f-fix", "f-hotfix", "f-spike",
-      "f-scope-check", "f-ba", "f-decompose", "f-bug-report"
+      "f-scope-check", "f-ba", "f-decompose", "f-bug-report", "f-autopilot"
     ],
     "hooks": [
       "session-start", "session-stop", "validate-commit", "validate-push",
       "pre-compact", "log-agent", "stop-check", "detect-gaps", "check-blockers",
-      "coworker-read-gate", "role-write-guard", "contract-reminder"
+      "coworker-read-gate", "role-write-guard", "contract-reminder", "grok-watch"
     ],
     "skills": ["next-task", "status", "f-setup-project"],
     "configs": ["pm-ref.md", "settings.json", "statusline.sh"],

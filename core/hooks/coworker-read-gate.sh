@@ -28,6 +28,10 @@ set +e
 # --- fail open if coworker is unavailable ---
 command -v coworker >/dev/null 2>&1 || exit 0
 
+# --- Grok out of credits (flagged by grok-watch.sh)? stop delegating, allow the
+#     read on the main model until the account is topped up. ---
+[ -f "${CLAUDE_PROJECT_DIR:-.}/.claude/.grok-broke" ] && exit 0
+
 INPUT=$(cat)
 
 # --- extract file_path ---

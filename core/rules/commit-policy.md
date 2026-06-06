@@ -43,6 +43,7 @@ These files don't belong in git regardless of mode:
 - `.claude/settings.local.json`
 - `.claude/locks.json` — runtime lock state
 - `.claude/.current-agent`, `.claude/.precompact-ts`, `.claude/.oq-state` — runtime hook markers
+- `.claude/.grok-broke`, `.claude/.grok-last`, `.claude/.autopilot` — runtime delegation/autopilot markers
 - `.claude/dream-state.json` — dream scheduler state
 - `.claude/metrics.log`, `.claude/logs/`
 - `.claude/backup-*/`

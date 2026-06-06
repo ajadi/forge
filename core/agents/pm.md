@@ -31,6 +31,8 @@ Load memory context:
 grep -h "" memory/*.md 2>/dev/null | head -80    # stack, patterns, decisions, known-issues
 ```
 
+Autopilot check: if `.claude/.autopilot` exists → run in **AUTOPILOT mode** (see "## Autopilot mode" below): chain tasks without stopping after each. Otherwise normal one-task-per-session mode.
+
 Load context (reference-passing only):
 ```
 Required: CLAUDE.md · backlog.md · tz.md (active reqs only) (active OQs only — grep '⏳' tz.md instead of reading full file if tz.md > 50 lines)
@@ -261,7 +263,7 @@ Deploy steps (only if config found AND user confirmed):
 
 ### Step 14: Report + STOP
 
-Always stop after one task. Report to user:
+Report to user:
 ```
 ✅ TASK-XXX done: [name]
 Done: [brief]
@@ -271,7 +273,9 @@ REQ closed: REQ-XXX ✅
 Next ready: TASK-YYY (high) / TASK-ZZZ (medium)
 ```
 
-STOP. Session complete.
+**AUTOPILOT mode** (`.claude/.autopilot` present): do NOT stop. Go to "## Autopilot mode" — pick the next ready task and continue the pipeline. Only halt on a hard stop.
+
+**Normal mode:** STOP after one task. Session complete. Never chain without user confirmation.
 
 ## How to spawn subagents
 
@@ -352,3 +356,19 @@ After Step 14 (task complete) — before stopping:
 # priority: unblocked + high priority + shortest critical path
 ```
 Tell user which 1-2 tasks are most valuable to do next and why (unblocks most, highest priority, shortest).
+
+## Autopilot mode
+
+Active when `.claude/.autopilot` exists (set by `/f-autopilot`). The user is away and wants the backlog run unattended end-to-end.
+
+Loop: after closing a task (Step 13) instead of stopping at Step 14, immediately select the next ready task (Step 1 selection rules) and run the full pipeline on it. Repeat. All quality gates, the review/reality-check steps, and the `role-write-guard` / `stop-check` hooks stay active — they are the guardrails that make unattended execution safe.
+
+Dry-run (Step 0.7) is skipped in autopilot — the user pre-authorized by invoking `/f-autopilot`.
+
+HARD STOPS — on any of these, **clear the flag** (`rm -f .claude/.autopilot`), STOP, and report. The Claude Code push notification fires on idle, so the user is pinged:
+- Open OQ / BLOCKED (business logic unclear) — autopilot cannot answer questions.
+- Test regression, or a Ralph-loop that exhausted its retries.
+- A production-deploy step (Step 13.5) — never auto-deploy (see production-safety.md); pause for explicit confirmation.
+- No ready task remains (backlog drained) — report "autopilot complete: N tasks done, M blocked".
+
+Log each autopilot task transition to `.claude/progress.log` (`[date] TASK-XXX autopilot→next`). Grok running out of credits (🟥 `.claude/.grok-broke`) does NOT halt autopilot — reads just fall back to the main model — but note it in the final report.

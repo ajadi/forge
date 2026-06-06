@@ -1,4 +1,4 @@
-# PM Reference Tables (Forge v2.2)
+# PM Reference Tables (Forge v2.3)
 
 Lookup tables for PM agent. No workflow here — workflow is in pm.md.
 

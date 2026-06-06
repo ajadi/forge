@@ -48,5 +48,34 @@ if [ -f "$TZ" ]; then
     [ "$OQ" -gt 0 ] && oq_label=" | ⚠️ OQ:${OQ}"
 fi
 
+# --- Active subagent + its model (which model is working right now) ---
+# Reads the .current-agent marker (epoch name model) written by log-agent.sh.
+# Shown only while fresh (< 600s) since there is no SubagentStop to clear it.
+agent_label=""
+MARKER="$cwd/.claude/.current-agent"
+if [ -f "$MARKER" ]; then
+    m_ts=$(awk '{print $1}' "$MARKER" 2>/dev/null)
+    m_agent=$(awk '{print $2}' "$MARKER" 2>/dev/null)
+    m_model=$(awk '{print $3}' "$MARKER" 2>/dev/null)
+    now=$(date +%s)
+    if [ -n "$m_ts" ] && [ -n "$m_agent" ] && [ $((now - m_ts)) -lt 600 ] 2>/dev/null; then
+        agent_label=" | ▸${m_agent}·${m_model:-?}"
+    fi
+fi
+
+# --- Grok / coworker delegation state ---
+grok_label=""
+if [ -f "$cwd/.claude/.grok-broke" ]; then
+    grok_label=" | 🟥 grok:NO-CREDITS"
+elif [ -f "$cwd/.claude/.grok-last" ]; then
+    g_ts=$(cat "$cwd/.claude/.grok-last" 2>/dev/null)
+    now=$(date +%s)
+    [ -n "$g_ts" ] && [ $((now - g_ts)) -lt 120 ] 2>/dev/null && grok_label=" | ▸grok"
+fi
+
+# --- Autopilot indicator ---
+auto_label=""
+[ -f "$cwd/.claude/.autopilot" ] && auto_label=" | 🛫AUTO"
+
 # --- Assemble ---
-printf "%s" "${ctx_label} | ${model}${tasks_label}${oq_label}"
+printf "%s" "${ctx_label} | ${model}${agent_label}${grok_label}${auto_label}${tasks_label}${oq_label}"

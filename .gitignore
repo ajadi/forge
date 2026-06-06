@@ -4,6 +4,9 @@
 .claude/.precompact-ts
 .claude/.oq-state
 .claude/dream-state.json
+.claude/.grok-broke
+.claude/.grok-last
+.claude/.autopilot
 .claude/locks.json
 .claude/metrics.log
 .claude/progress.log
