@@ -1,8 +1,12 @@
 # Forge
 
-Modular multi-agent development framework for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) with lightweight, file-based project memory.
+Modular multi-agent development framework for [Claude Code](https://docs.anthropic.com/en/docs/claude-code). **Version 2.2.**
 
-Forge turns Claude Code into a full dev team: PM orchestrates, agents implement, review, test, and deploy. Persistent project knowledge lives in plain `memory/*.md` files that every agent greps before guessing — no external service, no daemon, nothing to install.
+Forge turns Claude Code into a full dev team: PM orchestrates, agents implement, review, test, and deploy. Three things keep it from drifting or running up cost:
+
+- **File-based memory** — project knowledge lives in plain `memory/*.md` files every agent greps before guessing. No external service, no daemon, nothing to install.
+- **Mechanically enforced roles** — a `Write|Edit` guard hook stops PM and read-only agents from editing source code. The boundaries `AGENTS.md` declares are now actually enforced, not just documented.
+- **Token economy** — large non-source reads (docs, logs, boilerplate) are delegated to a cheap model (xAI Grok via [`coworker`](docs/coworker-setup.md)), keeping the reasoning model's context for code.
 
 ## Quick Start
 
@@ -117,12 +121,13 @@ memory/*.md ── flat-file project memory for all agents
 
 ### Key Design Principles
 
-- **PM never implements** — only orchestrates and delegates
+- **PM never implements** — only orchestrates and delegates (enforced by the `role-write-guard` hook, not just convention)
 - **Reference passing** — agents get file paths, not file contents
 - **Handoff contracts** — standardized format between agents (status, files_changed, validation_points)
-- **Stop rules** — every agent knows exactly when to halt
+- **Stop rules** — every agent knows exactly when to halt; the Stop hook gates mid-pipeline exits
 - **Autonomy ladder** (A1-A5) — agents earn more freedom with proven reliability
 - **File-based memory** — agents grep `memory/*.md` before guessing facts, append findings after tasks
+- **Token economy** — large non-source reads delegated to a cheap model so the reasoning model's context stays on code
 
 ## Memory System (flat files)
 
