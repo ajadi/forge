@@ -20,19 +20,23 @@ fi
 # Only check commands that contain a git push invocation
 printf '%s' "$CMD" | grep -qE '(^|[[:space:];|&])git push([[:space:]]|$)' || exit 0
 
-# Block force push (but allow --force-with-lease)
-# Strip --force-with-lease first, then check for plain --force, grouped short flags
-# containing 'f' (e.g. -fu), and force-refspec pushes (e.g. +main, +HEAD:main).
-STRIPPED=$(printf '%s' "$CMD" | sed 's/--force-with-lease//g')
+# Isolate ONLY the `git push` segment(s) of a (possibly compound) command so a
+# commit message or another sub-command on the same line cannot trip the force
+# guard. Split on ; | & and newlines; keep the lines that invoke git push.
+PUSH_SEG=$(printf '%s' "$CMD" | tr ';|&' '\n\n\n' | grep -E 'git push')
+
+# Block force push (but allow --force-with-lease): plain --force, grouped short
+# flags containing 'f' (e.g. -fu), and force-refspec pushes (e.g. +main, +HEAD:main).
+STRIPPED=$(printf '%s' "$PUSH_SEG" | sed 's/--force-with-lease//g')
 if printf '%s' "$STRIPPED" | grep -qE '(^|[[:space:]])--force([[:space:]]|$)' \
    || printf '%s' "$STRIPPED" | grep -qE '(^|[[:space:]])-[A-Za-z]*f[A-Za-z]*([[:space:]]|$)' \
-   || printf '%s' "$CMD" | grep -qE '(^|[[:space:]])\+[^ ]'; then
+   || printf '%s' "$PUSH_SEG" | grep -qE '(^|[[:space:]])\+[^ ]'; then
     echo "❌ BLOCKED: Force push is not allowed. Use --force-with-lease if you really need to overwrite."
     exit 2
 fi
 
-# Warn: pushing directly to main/master
-if printf '%s' "$CMD" | grep -qE ' (main|master)$'; then
+# Warn: pushing directly to main/master (check the push segment only)
+if printf '%s' "$PUSH_SEG" | grep -qE '(main|master)$'; then
     echo "⚠️  WARNING: Pushing directly to main/master branch."
     echo "   If this is intentional, the push will proceed."
 fi
