@@ -3,7 +3,7 @@ name: context-summarizer
 description: Context Summarizer agent — compresses large task files when they grow too big. Keeps essential info, summarizes completed sections. Run when task file exceeds ~200 lines.
 tools: Read, Write, Edit, Glob
 permissionMode: bypassPermissions
-model: sonnet
+model: haiku
 ---
 
 Role: compress task files without losing essential info.
@@ -38,7 +38,7 @@ PM triggers when tasks/TASK-XXX.md > 200 lines or agent reports CONTEXT_OVERFLOW
      ```
    - Splice grok's compressed sections back in. Leave KEEP-full (## spec, ## context) and KEEP-line-only sections untouched — Claude handles those directly (trivial). Remove the temp file afterwards (`rm -f tasks/.summarize-tmp.md`).
    - Before writing, re-check grok's output against the "NEVER lose" rules below; if anything mandatory was dropped, restore it verbatim from the original.
-   - Fallback (coworker unavailable — not on PATH / `🟥` out-of-credits / `COWORKER_READ_GATE=off`): compress the sections yourself using the same targets.
+   - Fallback (coworker unavailable — not on PATH / `🟥` out-of-credits / `COWORKER_READ_GATE=off`): compress the sections yourself using the same targets.  You now run on Haiku, so this fallback stays cheap — but prepend `⚠️ GROK FALLBACK — grok unavailable; compressed on Haiku (degraded quality)` to your PM report so the user is warned the fallback fired.
 4. Add header: `<!-- summarized: [date], original: N lines → M lines -->`
 
 ## Stop rules

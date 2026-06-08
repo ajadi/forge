@@ -1,7 +1,7 @@
 ---
 description: Delegate a bulk read / summarize to coworker (grok) — keep the reasoning model's context free
 argument-hint: "<question> -- <path> [more paths...]"
-allowed-tools: Bash, Read
+allowed-tools: Bash, Read, Agent
 ---
 
 # Delegate to coworker (grok)
@@ -20,3 +20,6 @@ coworker ask --paths <path1> [<path2> ...] --allow-code --profile code --questio
 - Relay coworker's answer concisely. Do **not** re-read the files yourself afterwards.
 - Source code you must reason over line-by-line: read it directly instead — coworker is for bulk / non-critical reads.
 - If coworker is unavailable (not installed / `🟥` out of credits / `COWORKER_READ_GATE=off`), say so and fall back to reading directly.
+
+## Fallback (grok down)
+If `coworker` is unavailable — not installed, `🟥` out of credits (`.grok-broke` flag), or the call exits non-zero — do NOT read the files on the main (expensive) model. Spawn a **Haiku** subagent (Agent tool, `subagent_type: general-purpose`, `model: haiku`) to read the given paths and answer the question, then prefix your reply to the user with `⚠️ grok unavailable — fell back to Haiku.` so they know the fallback fired.
