@@ -19,7 +19,7 @@
       "pre-compact", "log-agent", "stop-check", "detect-gaps", "check-blockers",
       "coworker-read-gate", "role-write-guard", "contract-reminder", "grok-watch"
     ],
-    "skills": ["next-task", "status", "f-setup-project"],
+    "skills": ["next-task", "status", "f-setup-project", "f-audit"],
     "configs": ["pm-ref.md", "settings.json", "statusline.sh"],
     "templates": ["tz-template.md", "adr-template.md"]
   },
