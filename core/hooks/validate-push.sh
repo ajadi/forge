@@ -23,7 +23,7 @@ printf '%s' "$CMD" | grep -qE '(^|[[:space:];|&])git push([[:space:]]|$)' || exi
 # Isolate ONLY the `git push` segment(s) of a (possibly compound) command so a
 # commit message or another sub-command on the same line cannot trip the force
 # guard. Split on ; | & and newlines; keep the lines that invoke git push.
-PUSH_SEG=$(printf '%s' "$CMD" | tr ';|&' '\n\n\n' | grep -E 'git push')
+PUSH_SEG=$(printf '%s' "$CMD" | tr ';|&' '\n\n\n' | grep -E '^[[:space:]]*git push')
 
 # Block force push (but allow --force-with-lease): plain --force, grouped short
 # flags containing 'f' (e.g. -fu), and force-refspec pushes (e.g. +main, +HEAD:main).

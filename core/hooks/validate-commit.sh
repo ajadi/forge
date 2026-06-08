@@ -20,20 +20,26 @@ fi
 # Only check commands that contain a git commit invocation (handles compound/prefixed commands)
 printf '%s' "$CMD" | grep -qE '(^|[[:space:];|&])git commit([[:space:]]|$)' || exit 0
 
-# Block --no-verify
-if printf '%s' "$CMD" | grep -q '\-\-no-verify'; then
+# Isolate ONLY the `git commit` segment(s) of a (possibly compound) command, and
+# strip quoted strings (the commit message etc.) so flag-like text inside a
+# message cannot trip the --no-verify guard.
+COMMIT_SEG=$(printf '%s' "$CMD" | tr ';|&' '\n\n\n' | grep -E '^[[:space:]]*git commit')
+COMMIT_FLAGS=$(printf '%s' "$COMMIT_SEG" | sed -E 's/"[^"]*"//g; s/'"'"'[^'"'"']*'"'"'//g')
+
+# Block --no-verify (real flag only — quoted message text was stripped above)
+if printf '%s' "$COMMIT_FLAGS" | grep -q '\-\-no-verify'; then
     echo "❌ BLOCKED: git commit --no-verify bypasses hooks. Remove the flag."
     exit 2
 fi
 
-# Block committing .env files
+# Block committing .env files (uses the staged diff, not the command string)
 if git diff --staged --name-only 2>/dev/null | grep -qE '(^|/)\.env($|\.)'; then
     echo "❌ BLOCKED: .env file staged for commit. Unstage it first: git restore --staged .env"
     exit 2
 fi
 
-# Warn: empty commit message
-if printf '%s' "$CMD" | grep -qE 'git commit -m[[:space:]]*["'"'"']["'"'"']'; then
+# Warn: empty commit message (commit segment, quotes intact so -m "" is visible)
+if printf '%s' "$COMMIT_SEG" | grep -qE 'git commit -m[[:space:]]*["'"'"']["'"'"']'; then
     echo "❌ BLOCKED: Empty commit message."
     exit 2
 fi
