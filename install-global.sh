@@ -87,6 +87,7 @@ echo "Backed up $n existing dir(s) to $BACKUP_DIR"
 # Copy by file. Default: skip existing (protect user customs). With --update:
 # overwrite — these are Forge's own files; files unique to you aren't in $src so
 # this loop never visits them, and they survive regardless.
+GLOBAL_COPY_FAILED=0
 copy_additive() {
   local src="$1" dst="$2"
   [ -d "$src" ] || return 0
@@ -96,11 +97,19 @@ copy_additive() {
     if [ -e "$dst/$base" ] && ! $DO_UPDATE; then
       echo "  skipped (exists): $dst/$base"
     elif [ -e "$dst/$base" ]; then
-      cp -r "$f" "$dst/"
-      echo "  updated: $dst/$base"
+      if cp -r "$f" "$dst/"; then
+        echo "  updated: $dst/$base"
+      else
+        echo "  ERROR: failed to copy $f -> $dst/"
+        GLOBAL_COPY_FAILED=1
+      fi
     else
-      cp -r "$f" "$dst/"
-      echo "  copied: $dst/$base"
+      if cp -r "$f" "$dst/"; then
+        echo "  copied: $dst/$base"
+      else
+        echo "  ERROR: failed to copy $f -> $dst/"
+        GLOBAL_COPY_FAILED=1
+      fi
     fi
   done
 }
@@ -122,6 +131,10 @@ copy_additive "$FORGE_DIR/core/skills"   "$GLOBAL_DIR/skills"
 echo "$FORGE_DIR" > "$GLOBAL_DIR/.forge-checkout"
 
 echo ""
+if [ "$GLOBAL_COPY_FAILED" -eq 1 ]; then
+  echo "Global install FAILED — one or more files could not be copied (see errors above)."
+  exit 1
+fi
 echo "Global install complete."
 echo "Forge checkout pointer: $GLOBAL_DIR/.forge-checkout"
 echo ""

@@ -40,19 +40,19 @@ git diff HEAD~1 | grep "^+" | grep -iE "password=|secret=|api_key=" | grep -v "t
 
 ## Step 2: Cross-check task file sections
 
-Read tasks/TASK-XXX.md sections: ## spec, ## developer (files_changed + decisions only), ## code review verdict, ## security verdict, ## unit-tester verdict, ## integration-tester verdict.
+Read tasks/TASK-XXX.md sections: ## spec, ## handoff: developer (files_changed + done + decisions), ## handoff: code-reviewer, ## handoff: security-analyst, ## handoff: unit-tester, ## handoff: integration-tester.
 If task file > 200 lines: grep section headers first (`grep "^## " tasks/TASK-XXX.md`), then read only the sections listed above.
 
-developer section:
+developer section (`## handoff: developer`):
 - [ ] "done" items exist in code? grep verify each.
-- [ ] "files changed" matches git diff?
+- [ ] "files_changed" matches git diff?
 - [ ] no BLOCKED without resolved OQ?
 
-code review section:
+code review section (`## handoff: code-reviewer`):
 - [ ] findings fixed? or just documented?
 - [ ] APPROVED means no criticals, not "good enough"?
 
-security section:
+security section (`## handoff: security-analyst`):
 - [ ] SAFE/MINOR based on evidence? files listed?
 - [ ] CRITICAL_BLOCK not ignored?
 
@@ -62,7 +62,7 @@ testing sections — DO NOT trust the claimed numbers; verify them:
 - [ ] **tests have teeth.** Open 2-3 of the new/changed tests (from the unit/integration-tester `files:` list) and read them. Reject: assertion-free tests, tautologies (`assert True`, `assertEqual(x, x)`, snapshot-only), and tests that mock the very unit under test. A test that cannot fail is not a test → NEEDS_WORK.
 - [ ] **new/changed functions are actually exercised.** Each new public function/branch from the diff has at least one test hitting a failure/edge path, not only the happy path. A green global coverage % can hide an untested new function — check the diff, not just the number.
 - [ ] coverage not lower than baseline?
-- [ ] coverage ≥ 80% for changed files? (run: `find . -name "coverage-summary.json" | xargs grep -E '"pct"' 2>/dev/null | head -10`). If coverage data absent → NEEDS_WORK unless task is XS/docs-only.
+- [ ] coverage ≥ 80% for changed files? (run: `find . -name "coverage-summary.json" | xargs grep -E '"pct"' 2>/dev/null | head -10`). Coverage gate applies only when the task's complexity/pipeline includes a tester (M/L/XL, i.e. L3+). Skip this check entirely for XS/S (L1/L2) tasks and docs-only tasks — their pipelines have no tester, so coverage data will legitimately be absent.
 
 ## Step 3: AC verification
 For each AC in ## spec section → verify it exists in code (grep/read).
@@ -74,7 +74,7 @@ PASSED requires ALL:
 - [ ] test artifacts exist, no failures
 - [ ] **test suite re-run independently, numbers match the claim**
 - [ ] **sampled tests assert real behavior (no tautologies, no mocking the subject); new functions have a failure/edge-path test**
-- [ ] coverage ≥ 80% for changed files (or XS/docs-only task)
+- [ ] coverage ≥ 80% for changed files (only required when pipeline includes a tester, i.e. M/L/XL; skip for XS/S/docs-only)
 - [ ] no CRITICAL_BLOCK, no hardcoded secrets
 - [ ] critical review findings fixed
 - [ ] lint clean (from developer section)

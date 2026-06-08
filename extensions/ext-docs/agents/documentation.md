@@ -13,8 +13,8 @@ Role: update docs for changes. Read task file, update only what changed.
 2. Read tasks/TASK-XXX.md sections: spec, developer
 3. Determine: new public APIs, changed behavior, new config, new endpoints
 
-Update only relevant docs:
-- new public functions/classes → inline docstrings
+Update only relevant docs (.md and doc artifacts only — do NOT edit source code files):
+- new public functions/classes → API docs (.md), not inline source docstrings
 - new/changed API endpoints → API docs
 - new config options → README config section
 - user-visible behavior change → CHANGELOG entry

@@ -5,4 +5,4 @@ context: fork
 
 Use the decomposer agent to break tz.md into tasks and produce backlog.md + tasks/TASK-NNN.md files.
 
-Prerequisite: tz.md must exist (run /ba first if it doesn't).
+Prerequisite: tz.md must exist (run /f-ba first if it doesn't).

@@ -22,24 +22,6 @@ Role: implement. Minimal, clean, no extras.
 6. Run lint/typecheck from memory/stack.md
 7. Verify existing tests pass
 
-Append to tasks/TASK-XXX.md:
-```
-## developer
-
-### done
-[what was implemented]
-
-### files changed
-- path/to/file — what changed
-- path/to/file — created
-
-### decisions
-[implementation details only, not business logic]
-
-### issues
-[if any]
-```
-
 ## BLOCKED protocol
 
 Business logic unclear → STOP:
@@ -61,11 +43,18 @@ Before writing handoff section, verify:
 
 ## Handoff format
 
+Append ONE section to tasks/TASK-XXX.md:
+
 ```markdown
 ## handoff: developer
 status: DONE | NEEDS_WORK | BLOCKED
 files_changed:
   - path/to/file.ts (lines 42-67) — [what changed]
+done:
+  - [what was implemented]
+decisions:
+  - [implementation details only, not business logic]
+issues: none | [list]
 remaining_questions: none | [list]
 validation_points:
   - [what code-reviewer should verify]

@@ -6,11 +6,13 @@
     "agents": [
       "pm", "developer", "code-reviewer", "reality-checker", "architect",
       "decomposer", "business-analyst", "handoff-validator", "unit-tester",
-      "database-architect", "rapid-prototyper", "status", "context-summarizer"
+      "database-architect", "rapid-prototyper", "status", "context-summarizer",
+      "it-forums"
     ],
     "commands": [
       "f-start", "f-new-task", "f-fix", "f-hotfix", "f-spike",
-      "f-scope-check", "f-ba", "f-decompose", "f-bug-report", "f-autopilot"
+      "f-scope-check", "f-ba", "f-decompose", "f-bug-report", "f-autopilot",
+      "f-coworker"
     ],
     "hooks": [
       "session-start", "session-stop", "validate-commit", "validate-push",

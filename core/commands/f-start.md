@@ -51,7 +51,7 @@ Wait for the user's answer.
 4. Show path:
    - `business-analyst` → tz.md
    - `decomposer` → backlog.md + tasks/
-   - `estimator` → timeline.md
+   - `estimator` → timeline.md (only if `.claude/agents/estimator.md` exists; otherwise skip to `pm`)
    - `pm` → runs pipeline on first task
 
 ### If B: Have an idea
@@ -68,23 +68,23 @@ Wait for the user's answer.
 1. Ask 2 questions:
    - Is tz.md already written, or needs to be created?
    - Is this the first run of decomposer, or do tasks already exist?
-2. If tz.md exists but no tasks: run `decomposer` → then `estimator`
+2. If tz.md exists but no tasks: run `decomposer` → then `estimator` (only if `.claude/agents/estimator.md` exists)
 3. If tasks already exist: run `pm` directly (picks first unblocked task)
 4. Show path:
    - `decomposer` → backlog.md + tasks/
-   - `estimator` → timeline.md
+   - `estimator` → timeline.md (only if `.claude/agents/estimator.md` exists; otherwise go straight to `pm`)
    - `pm` → first task
 
 ### If D: Existing project
 
 1. Share what you found in Step 1:
    - "I can see [N tasks in backlog / M completed / memory populated / tz.md present]..."
-2. If memory is empty: recommend `onboarding` agent first (reads codebase, populates memory/)
+2. If memory is empty: recommend `onboarding` agent first (reads codebase, populates memory/) — only if `.claude/agents/onboarding.md` exists; otherwise seed memory manually or proceed to `pm`
 3. If tasks exist: suggest running `pm` — it will show current status and pick up where things left off
 4. If tz.md missing: recommend `business-analyst` in amend mode to document existing behavior
 5. Show path:
-   - `onboarding` agent — if memory is empty
-   - `/status` — see current state
+   - `onboarding` agent — if memory is empty and `.claude/agents/onboarding.md` exists
+   - `/f-status` — see current state
    - `pm` — continue work
 
 ---

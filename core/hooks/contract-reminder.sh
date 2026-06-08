@@ -10,8 +10,8 @@ if [ -d "tasks" ]; then
     for f in tasks/TASK-*.md; do
         [ -f "$f" ] || continue
         if grep -q 'status: in_progress' "$f" 2>/dev/null; then
-            NAME=$(head -1 "$f" | sed 's/^# *//')
-            STAGE=$(grep '^## ' "$f" | tail -1 | sed 's/^## *//')
+            NAME=$(head -1 "$f" | sed 's/^# *//' | tr -d '\r\n' | tr -d '\000-\037' | cut -c1-80)
+            STAGE=$(grep '^## ' "$f" | tail -1 | sed 's/^## *//' | tr -d '\r\n' | tr -d '\000-\037' | cut -c1-40)
             ACTIVE="${NAME} — last stage: ${STAGE:-none}"
             break
         fi

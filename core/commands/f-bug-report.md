@@ -8,8 +8,8 @@ allowed-tools: Read, Glob, Grep, Write
 
 ## Usage
 
-- `/bug-report [description]` — create report from user's description
-- `/bug-report analyze [path]` — scan file/directory for potential bugs
+- `/f-bug-report [description]` — create report from user's description
+- `/f-bug-report analyze [path]` — scan file/directory for potential bugs
 
 ---
 
@@ -61,7 +61,7 @@ allowed-tools: Read, Glob, Grep, Write
 ```
 
 4. Ask user: "Save to `handoffs/bugs/BUG-[NNNN].md`?"
-5. If yes — write file and suggest adding a task to backlog via `/new-task`
+5. If yes — write file and suggest adding a task to backlog via `/f-new-task`
 
 ---
 

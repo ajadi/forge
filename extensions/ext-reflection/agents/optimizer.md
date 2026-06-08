@@ -56,11 +56,11 @@ Output a structured report:
 2. ...
 
 ### Applied fixes
-(list fixes applied automatically — only safe, unambiguous ones like updating a reference)
+none — optimizer is propose-only for all framework files
 ```
 
 ## Rules
-- Apply only safe fixes automatically: updating stale references, fixing typos in frontmatter
+- PROPOSE ONLY: never apply any fix to agent files (`.claude/agents/`), commands (`.claude/commands/`), or `CLAUDE.md` — the role-write-guard denies those writes. Output proposals only (match reflect.md's model).
 - For anything structural (merging agents, deleting commands) — only propose, never apply
 - Write the report to `handoffs/optimizer-report-<YYYYMMDD>.md`
 

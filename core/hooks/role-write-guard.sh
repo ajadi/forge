@@ -101,12 +101,23 @@ fi
 [ -z "$AGENT" ] && AGENT="pm-inline"
 
 TEST=false; DOC=false
-ci '(^|/)(tests?|__tests__|specs?|e2e)/|\.(test|spec)\.[a-z0-9]+$|_test\.[a-z0-9]+$|(^|/)test_[^/]*\.py$' && TEST=true
+# Test-file classifier: standard dirs, named extensions, e2e dir, and smoke/e2e spec files anywhere.
+ci '(^|/)(tests?|__tests__|specs?|e2e)/|\.(test|spec)\.[a-z0-9]+$|_test\.[a-z0-9]+$|(^|/)test_[^/]*\.py$|(^|/)smoke\.spec\.[a-z0-9]+$|(^|/)[^/]*\.e2e\.[a-z0-9]+$' && TEST=true
 ci '\.(md|mdx|rst|txt|adoc)$|^docs/' && DOC=true
+# Design deliverables written by ux-interviewer / ui-designer / estimator.
+DESIGN_DOC=false
+ci '(^|/)(design-brief|design-spec|timeline|estimate)\.(md|mdx)$' && DESIGN_DOC=true
 
-READONLY_NOSRC=" pm architect code-reviewer reality-checker business-analyst security-analyst dependency-auditor status handoff-validator accessibility-auditor performance-profiler test-reviewer estimator consilium migration-validator smoke-tester e2e-tester ux-interviewer ui-designer decomposer optimizer onboarding dream reflect retro context-summarizer "
-TESTER=" unit-tester integration-tester "
+# Read-only / non-implementing roles (cannot write product source at all).
+READONLY_NOSRC=" pm architect code-reviewer reality-checker business-analyst security-analyst dependency-auditor status handoff-validator accessibility-auditor performance-profiler test-reviewer consilium decomposer optimizer onboarding dream reflect retro context-summarizer it-forums "
+# Testers: may write test files only.
+TESTER=" unit-tester integration-tester smoke-tester e2e-tester "
+# Doc writers: may write docs only.
 DOCWRITER=" documentation changelog-agent "
+# Design / estimation roles: may write their own .md deliverables (design-brief, design-spec, timeline, estimate).
+DESIGNER=" ux-interviewer ui-designer estimator "
+# Implementation roles: explicitly allowed to write source.
+IMPL=" developer database-architect devops env-manager refactoring rapid-prototyper git-workflow migration-validator "
 in_set() { case "$1" in *" $AGENT "*) return 0;; *) return 1;; esac; }
 
 if [ "$AGENT" = "pm-inline" ]; then
@@ -123,7 +134,16 @@ if in_set "$DOCWRITER"; then
     $DOC && exit 0
     deny "agent '$AGENT' writes docs only; it cannot change code ('$REL')."
 fi
+if in_set "$DESIGNER"; then
+    $DESIGN_DOC && exit 0
+    $DOC && exit 0
+    deny "agent '$AGENT' may only write design/estimation deliverable docs (design-brief.md, design-spec.md, timeline.md, estimate.md); '$REL' is not one of those."
+fi
 
-# Impl agents (developer, database-architect, devops, env-manager, refactoring,
-# rapid-prototyper, git-workflow) and any unrecognized agent -> allow (fail open).
-exit 0
+# Explicit impl set -> allow.
+if in_set "$IMPL"; then
+    exit 0
+fi
+
+# Unknown/unclassified agent -> DENY with a clear message so the gap is visible.
+deny "agent '$AGENT' is not classified in role-write-guard — add it to the appropriate role set (READONLY_NOSRC / TESTER / DOCWRITER / DESIGNER / IMPL) before it can write source files."

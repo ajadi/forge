@@ -1,3 +1,7 @@
+---
+description: Audit .claude/ for duplicates, dead content, broken references, and desync — produces a report with proposed fixes
+---
+
 Run framework optimizer via the optimizer subagent.
 
 $ARGUMENTS

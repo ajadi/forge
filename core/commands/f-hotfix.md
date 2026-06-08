@@ -1,7 +1,7 @@
 ---
 description: Emergency fix workflow bypassing normal PM pipeline. Creates hotfix record, implements minimal fix, collects sign-offs.
 argument-hint: "[bug description or BUG-ID]"
-allowed-tools: Read, Glob, Grep, Write, Edit, Bash
+allowed-tools: Read, Glob, Grep, Write, Edit, Bash, Agent
 ---
 
 

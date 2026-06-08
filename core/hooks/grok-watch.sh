@@ -26,11 +26,22 @@ fi
 # Only care about coworker invocations.
 printf '%s' "$CMD" | grep -q "coworker" || exit 0
 
-# Billing / no-credit signatures (case-insensitive). Matched against the whole
-# payload (which includes the tool response/output).
-BILLING_RE='no credits|out of credits|insufficient|quota|payment required|402|billing|does(n.?t| not) have any credits|exceeded your'
+# Billing / no-credit signatures (case-insensitive). Matched against the tool
+# output/error portion only to avoid false positives from the payload context.
+# Extract tool output; fall back to full input only when extraction fails.
+if command -v jq >/dev/null 2>&1; then
+    TOOL_OUT=$(printf '%s' "$INPUT" | jq -r '(.tool_response // .output // .error // "") | tostring' 2>/dev/null)
+elif command -v python3 >/dev/null 2>&1; then
+    TOOL_OUT=$(printf '%s' "$INPUT" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("tool_response") or d.get("output") or d.get("error") or "")' 2>/dev/null || true)
+elif command -v python >/dev/null 2>&1; then
+    TOOL_OUT=$(printf '%s' "$INPUT" | python -c 'import json,sys; d=json.load(sys.stdin); print(d.get("tool_response") or d.get("output") or d.get("error") or "")' 2>/dev/null || true)
+else
+    TOOL_OUT="$INPUT"
+fi
+# Require credit-specific phrasing; anchor 402 to HTTP/payment context.
+BILLING_RE='no credits|out of credits|does(n.?t| not) have any credits|exceeded your (credit|quota)|insufficient (credit|fund)|HTTP 402|status code 402|payment required'
 
-if printf '%s' "$INPUT" | grep -qiE "$BILLING_RE"; then
+if printf '%s' "$TOOL_OUT" | grep -qiE "$BILLING_RE"; then
     echo "$(date +%s) | coworker billing error on: $CMD" > "$PROJ/.claude/.grok-broke" 2>/dev/null
     echo ""
     echo "🟥 ============================================================"

@@ -26,8 +26,14 @@ echo "[$(date '+%Y-%m-%d %H:%M')] TASK-XXX branch: $BRANCH" >> .claude/progress.
 ```
 
 ### On task complete (instead of direct commit)
+
+Stage only the files listed in the handoff `files_changed`. Consult `manifest.md` → `repo_access` before staging:
+- `private-solo`: framework paths (`.claude/`, `memory/`, `tasks/`, `CLAUDE.md`) are allowed.
+- `private-shared` / `public`: stage product files only; never stage framework paths.
+
 ```bash
-git add -A
+# Stage specific files from handoff files_changed — never use git add -A or git add .
+git add path/to/changed/file1 path/to/changed/file2
 git commit -m "feat(TASK-XXX): [task name]
 
 [what was done — 2-3 lines]

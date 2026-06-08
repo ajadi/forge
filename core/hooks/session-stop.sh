@@ -59,10 +59,17 @@ if [ -f "$DREAM_STATE" ]; then
     if command -v python3 >/dev/null 2>&1; then DS_PY="python3"
     elif command -v python >/dev/null 2>&1; then DS_PY="python"
     fi
-    CURRENT_COUNT=$($DS_PY -c "import json,sys; d=json.load(open('$DREAM_STATE')); print(d.get('session_count',0))" 2>/dev/null || echo 0)
-    NEW_COUNT=$((CURRENT_COUNT + 1))
-    LAST_RUN=$($DS_PY -c "import json,sys; d=json.load(open('$DREAM_STATE')); print(d.get('last_run') or '')" 2>/dev/null || echo "")
-    echo "{\"last_run\": \"$LAST_RUN\", \"session_count\": $NEW_COUNT}" > "$DREAM_STATE"
+    # Only rewrite if python is available (avoids silently wiping the file).
+    if [ -n "$DS_PY" ]; then
+        CURRENT_COUNT=$($DS_PY -c "import json,sys; d=json.load(open('$DREAM_STATE')); print(d.get('session_count',0))" 2>/dev/null || echo 0)
+        NEW_COUNT=$((CURRENT_COUNT + 1))
+        LAST_RUN=$($DS_PY -c "import json,sys; d=json.load(open('$DREAM_STATE')); print(d.get('last_run') or '')" 2>/dev/null || echo "")
+        # Atomic write: write to temp then move, so a failure doesn't corrupt the file.
+        DS_TMP="${DREAM_STATE}.tmp.$$"
+        printf '{"last_run": "%s", "session_count": %s}\n' "$LAST_RUN" "$NEW_COUNT" > "$DS_TMP" 2>/dev/null \
+            && mv "$DS_TMP" "$DREAM_STATE" 2>/dev/null \
+            || rm -f "$DS_TMP" 2>/dev/null
+    fi
 fi
 
 exit 0

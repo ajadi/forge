@@ -85,7 +85,17 @@ Read task file: `tasks/TASK-XXX.md`
 
 ### Step 2: Git checkpoint + lock
 ```bash
-git add -A && git commit -m "checkpoint: before TASK-XXX" --allow-empty
+# Stage specific paths — never git add -A (violates commit-policy.md)
+# Read manifest.md repo_access first:
+repo_access=$(grep '^repo_access=' manifest.md | cut -d= -f2)
+if [ "$repo_access" = "private-solo" ]; then
+  # Framework state allowed in git
+  git add tasks/ memory/ .claude/ CLAUDE.md manifest.md backlog.md tz.md 2>/dev/null
+else
+  # Shared/public — framework state stays local; only product paths
+  git add src/ lib/ app/ pages/ docs/ 2>/dev/null
+fi
+git commit -m "checkpoint: before TASK-XXX" --allow-empty
 echo "[$(date '+%Y-%m-%d %H:%M')] TASK-XXX START" >> .claude/progress.log
 ```
 Add task files to .claude/locks.json.
@@ -112,11 +122,22 @@ If architect returns UNCERTAINTY (not a design):
 → REFUTED → save to decisions.md → ask user how to proceed.
 → If user declines spike → ask for clarification to resolve uncertainty, update task file, retry architect.
 
+### Step 4.5: Database Architect (conditional)
+
+RUN if: task spec `agent: database-architect`, OR diff touches `migrations/`, `*.sql`, `schema.*`, or DB model files.
+SKIP if: no DB/schema changes in scope.
+
+For L3+: run database-architect in parallel with architect (Step 4) if both are needed — no shared files.
+
+"Read tasks/TASK-XXX.md sections spec+context. Append ## database-architect section with schema design and migration plan."
+
+If database-architect returns UNCERTAINTY → follow same escalation path as architect (Step 4).
+
 ### Step 5: Developer
 
 "Read tasks/TASK-XXX.md sections spec+architect+context. Read memory/patterns.md path only. Implement. Append ## developer section."
 
-XL complexity → override: instruct agent to use opus model.
+XL complexity → override: spawn developer with `model: "opus"` (see "How to spawn subagents").
 
 BLOCKED returned → STOP. Show OQ to user with priority. After answer → resume Step 5.
 
@@ -212,7 +233,15 @@ PASSED → Step 13. NEEDS_WORK → Step 10. BLOCKED → immediate STOP.
 ### Step 13: Close task
 
 ```bash
-git add -A && git commit -m "feat(TASK-XXX): [name]"
+# Stage only files listed in the developer handoff files_changed, plus framework state per repo_access.
+# Never git add -A — see commit-policy.md.
+repo_access=$(grep '^repo_access=' manifest.md | cut -d= -f2)
+# Stage product files from developer handoff (read files_changed from tasks/TASK-XXX.md):
+# git add <each file from files_changed>
+if [ "$repo_access" = "private-solo" ]; then
+  git add tasks/ memory/ .claude/ CLAUDE.md manifest.md backlog.md tz.md 2>/dev/null
+fi
+git commit -m "feat(TASK-XXX): [name]"
 ```
 
 Unlock: remove task entries from .claude/locks.json.
@@ -286,12 +315,31 @@ Syntax for each delegation step:
 Agent(
   subagent_type: "<agent-name>",   // e.g. "developer", "code-reviewer", "reality-checker"
   mode: "bypassPermissions",        // always required
-  run_in_background: false,         // false = wait for result; true = parallel only
+  model: "<model-id>",              // optional; omit to use agent default; set for XL developer override
+  run_in_background: false,         // see guidance below
   prompt: "<instructions with file paths only — never paste file contents>"
 )
 ```
 
-Available subagent names (from `.claude/agents/`): `handoff-validator`, `developer`, `architect`, `code-reviewer`, `security-analyst`, `unit-tester`, `integration-tester`, `test-reviewer`, `reality-checker`, `smoke-tester`, `e2e-tester`, `changelog-agent`, `dependency-auditor`, `documentation`, `context-summarizer`.
+**run_in_background guidance** — CLAUDE.md says "always background" to keep the orchestrator responsive. Interpret this as:
+- `true` for genuinely parallel work (e.g. code-reviewer + security-analyst at the same time): launch both, then wait for both results before continuing the pipeline.
+- `false` for sequential gated steps (architect → developer → reviewer): you must have the previous result before the next step can start. Using `false` here is correct — the step cannot proceed without the output.
+- Never leave a gated pipeline step fire-and-forget; always collect results before advancing to the next gate.
+
+**XL developer override**: when complexity is XL, pass `model: "opus"` to the developer spawn:
+```
+Agent(
+  subagent_type: "developer",
+  mode: "bypassPermissions",
+  model: "opus",
+  run_in_background: false,
+  prompt: "..."
+)
+```
+
+Available subagent names (core, always installed): `handoff-validator`, `developer`, `architect`, `code-reviewer`, `reality-checker`, `context-summarizer`, `decomposer`, `rapid-prototyper`, `business-analyst`, `database-architect`, `status`, `unit-tester`.
+
+Extension agents (only if installed — check `.claude/agents/` before spawning): `security-analyst`, `integration-tester`, `test-reviewer`, `smoke-tester`, `e2e-tester`, `changelog-agent`, `dependency-auditor`, `documentation`, `it-forums`, `devops`, `env-manager`, `git-workflow`, `migration-validator`, `performance-profiler`, `refactoring`, `ui-designer`, `ux-interviewer`, `accessibility-auditor`, `estimator`, `consilium`, `reflect`, `dream`, `optimizer`, `retro`, `onboarding`.
 
 Rules:
 - Always pass **file paths**, not file content (reference-passing protocol)

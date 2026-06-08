@@ -14,11 +14,18 @@ warnings=""
 [ ! -f "backlog.md" ] && warnings="${warnings}\n⚠ No backlog.md found — run /f-decompose to create task backlog"
 
 # Check for memory/stack.md (tech stack)
-[ ! -f "memory/stack.md" ] && warnings="${warnings}\n⚠ No memory/stack.md — run /f-onboard to populate project memory"
+if [ ! -f "memory/stack.md" ]; then
+    if [ -f ".claude/commands/f-onboard.md" ]; then
+        warnings="${warnings}\n⚠ No memory/stack.md — run /f-onboard to populate project memory"
+    else
+        warnings="${warnings}\n⚠ No memory/stack.md — run /f-start to populate project memory"
+    fi
+fi
 
 # Check for stale locks
 if [ -f ".claude/locks.json" ]; then
-  lock_count=$(grep -c '"locked_at"' .claude/locks.json 2>/dev/null || echo 0)
+  lock_count=$(grep -c '"locked_at"' .claude/locks.json 2>/dev/null | tr -d '\r'); true
+  lock_count="${lock_count:-0}"
   if [ "$lock_count" -gt 0 ]; then
     warnings="${warnings}\n⚠ locks.json has $lock_count active locks — check for abandoned tasks"
   fi

@@ -43,30 +43,11 @@ result: PASSED N/N | FAILED N/M — [failures]
 
 If tests run against a production or staging DB, delete ALL records created during the run before finishing. This is not optional.
 
-Use identifiable test markers in all created data:
-- `customerName`: include "E2E" (e.g. "Test E2E User")
-- `email`: use `*e2e*` pattern (e.g. `test-e2e@example.com`)
-- `phone`: use a recognizable test number (e.g. `+972501234567`)
+Use identifiable test markers in all created data — consistent string you can match on cleanup (e.g. name contains "e2e", email matches `*e2e*`). Choose markers that are unique to your project's data model.
 
-Cleanup SQL to run via SSH → psql after every production run:
-```sql
--- Delete order items first (FK)
-DELETE FROM "OrderItem" WHERE "orderId" IN (
-  SELECT id FROM "Order"
-  WHERE "customerName" ILIKE '%e2e%' OR "customerEmail" ILIKE '%e2e%'
-);
--- Delete orders
-DELETE FROM "Order"
-WHERE "customerName" ILIKE '%e2e%' OR "customerEmail" ILIKE '%e2e%';
--- Delete users
-DELETE FROM "User"
-WHERE name ILIKE '%e2e%' OR email ILIKE '%e2e%';
--- Delete push subscriptions
-DELETE FROM "PushSubscription"
-WHERE endpoint ILIKE '%e2e%' OR "userId" IN (
-  SELECT id FROM "User" WHERE email ILIKE '%e2e%'
-);
-```
+Cleanup strategy: delete test records via the **project's own data layer** (ORM, repository, or migration utility) rather than raw SQL, so the schema is never hardcoded here. If direct DB access is necessary, read the project schema first and construct the DELETE statements from the actual table/column names.
+
+Verify deletion counts: assert that the number of deleted rows matches the number of records created. Report counts in the task file summary.
 
 Report cleanup counts in the task file summary.
 

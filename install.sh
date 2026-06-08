@@ -222,23 +222,66 @@ mkdir -p "$TARGET"/{memory,tasks/archive,scripts/lib,docs}
 echo ""
 echo "[core] Installing agents, commands, hooks, rules, scripts..."
 
-cp "$FORGE_DIR"/core/agents/*.md      "$TARGET/.claude/agents/"
-cp "$FORGE_DIR"/core/commands/*.md    "$TARGET/.claude/commands/"
-cp "$FORGE_DIR"/core/hooks/*.sh       "$TARGET/.claude/hooks/"
-cp "$FORGE_DIR"/core/rules/*.md       "$TARGET/.claude/rules/"
-cp "$FORGE_DIR"/core/pm-ref.md        "$TARGET/.claude/"
-cp "$FORGE_DIR"/core/statusline.sh    "$TARGET/.claude/"
-cp "$FORGE_DIR"/core/AGENTS.md        "$TARGET/.claude/AGENTS.md"
+# Back up existing per-file directories before overwriting so a re-install
+# never silently destroys locally-edited hooks/agents/commands/rules.
+for subdir in agents commands hooks rules; do
+  src_dir="$TARGET/.claude/$subdir"
+  if [ -d "$src_dir" ] && [ "$(ls -A "$src_dir" 2>/dev/null)" ]; then
+    mkdir -p "$BACKUP_DIR/.claude/$subdir"
+    cp "$src_dir"/* "$BACKUP_DIR/.claude/$subdir/" 2>/dev/null || true
+  fi
+done
+
+COPY_FAILED=0
+
+copy_mandatory() {
+  # Usage: copy_mandatory <glob_or_file> <dest_dir> [label]
+  local src="$1" dst="$2" label="${3:-$1}"
+  cp $src "$dst" 2>/dev/null
+  local rc=$?
+  if [ $rc -ne 0 ]; then
+    echo "  ERROR: failed to copy $label"
+    COPY_FAILED=1
+  fi
+}
+
+copy_mandatory "$FORGE_DIR/core/agents/*.md"   "$TARGET/.claude/agents/"   "core/agents/*.md"
+copy_mandatory "$FORGE_DIR/core/commands/*.md"  "$TARGET/.claude/commands/" "core/commands/*.md"
+copy_mandatory "$FORGE_DIR/core/hooks/*.sh"     "$TARGET/.claude/hooks/"    "core/hooks/*.sh"
+copy_mandatory "$FORGE_DIR/core/rules/*.md"     "$TARGET/.claude/rules/"    "core/rules/*.md"
+copy_mandatory "$FORGE_DIR/core/pm-ref.md"      "$TARGET/.claude/"          "core/pm-ref.md"
+copy_mandatory "$FORGE_DIR/core/statusline.sh"  "$TARGET/.claude/"          "core/statusline.sh"
+copy_mandatory "$FORGE_DIR/core/AGENTS.md"      "$TARGET/.claude/AGENTS.md" "core/AGENTS.md"
+copy_mandatory "$FORGE_DIR/core/scripts/framework-state-mode.sh" "$TARGET/scripts/" "core/scripts/framework-state-mode.sh"
+copy_mandatory "$FORGE_DIR/core/scripts/switch-repo-access.sh"   "$TARGET/scripts/" "core/scripts/switch-repo-access.sh"
+copy_mandatory "$FORGE_DIR/core/scripts/lib/merge_claude_md.py"  "$TARGET/scripts/lib/" "core/scripts/lib/merge_claude_md.py"
+
+# Verify non-zero file counts for mandatory dirs
+agents_installed=$(ls "$TARGET/.claude/agents/" 2>/dev/null | wc -l)
+hooks_installed=$(ls "$TARGET/.claude/hooks/"  2>/dev/null | wc -l)
+if [ "$agents_installed" -eq 0 ]; then
+  echo "  ERROR: no agents installed — check $FORGE_DIR/core/agents/"
+  COPY_FAILED=1
+fi
+if [ "$hooks_installed" -eq 0 ]; then
+  echo "  ERROR: no hooks installed — check $FORGE_DIR/core/hooks/"
+  COPY_FAILED=1
+fi
+
+# Optional copies — failure is non-fatal
 cp "$FORGE_DIR"/core/templates/*.md   "$TARGET/.claude/templates/" 2>/dev/null || true
 
 # docs/ — human setup guides referenced by CLAUDE.md (e.g. coworker-setup.md)
 cp "$FORGE_DIR"/core/docs/*.md        "$TARGET/docs/" 2>/dev/null || true
 
-# scripts/ — repo_access machinery + merger lib
-cp "$FORGE_DIR"/core/scripts/framework-state-mode.sh "$TARGET/scripts/"
-cp "$FORGE_DIR"/core/scripts/switch-repo-access.sh   "$TARGET/scripts/"
-cp "$FORGE_DIR"/core/scripts/lib/merge_claude_md.py  "$TARGET/scripts/lib/"
 chmod +x "$TARGET/scripts"/*.sh "$TARGET/.claude/hooks"/*.sh 2>/dev/null || true
+
+if [ "$COPY_FAILED" -eq 1 ]; then
+  echo ""
+  echo "  *** INSTALL FAILED: one or more mandatory files could not be copied. ***"
+  echo "  Review errors above. Backup available at: $BACKUP_DIR"
+  exit 1
+fi
 
 # settings.json — copy if missing, otherwise merge missing hooks
 install_settings() {
@@ -246,23 +289,53 @@ install_settings() {
     cp "$FORGE_DIR/core/settings.json" "$TARGET/.claude/settings.json"
     echo "  Created: .claude/settings.json"
   elif [ -n "$PYTHON" ]; then
-    "$PYTHON" - "$TARGET/.claude/settings.json" "$FORGE_DIR/core/settings.json" <<'PY' 2>/dev/null || echo "  WARN: settings merge failed — manual review needed"
+    "$PYTHON" - "$TARGET/.claude/settings.json" "$FORGE_DIR/core/settings.json" <<'PY'
 import json, sys
+
 existing_path, template_path = sys.argv[1], sys.argv[2]
-with open(existing_path) as f: existing = json.load(f)
-with open(template_path) as f: template = json.load(f)
+# utf-8-sig strips UTF-8 BOM — common on Windows-generated settings files
+with open(existing_path, encoding='utf-8-sig') as f: existing = json.load(f)
+with open(template_path, encoding='utf-8-sig') as f: template = json.load(f)
 t_hooks = template.get('hooks', {}); e_hooks = existing.get('hooks', {})
-added = 0
-for k, v in t_hooks.items():
-    if k not in e_hooks:
-        e_hooks[k] = v; added += 1
+added_blocks = 0
+skipped_events = []
+for event, t_blocks in t_hooks.items():
+    if event not in e_hooks:
+        # Whole event key absent — add it wholesale
+        e_hooks[event] = t_blocks
+        added_blocks += len(t_blocks)
+    else:
+        # Event key present — merge at the block level, dedup by command string
+        existing_cmds = {b.get('command') for b in e_hooks[event] if 'command' in b}
+        for block in t_blocks:
+            cmd = block.get('command')
+            if cmd and cmd not in existing_cmds:
+                e_hooks[event].append(block)
+                existing_cmds.add(cmd)
+                added_blocks += 1
+            elif cmd:
+                skipped_events.append(f"{event}:{cmd}")
 existing['hooks'] = e_hooks
-with open(existing_path, 'w') as f:
+with open(existing_path, 'w', encoding='utf-8') as f:
     json.dump(existing, f, indent=2); f.write('\n')
-print(f"  settings.json: merged ({added} new hook entries)")
+print(f"  settings.json: merged ({added_blocks} hook block(s) added)")
+if skipped_events:
+    print(f"  settings.json: already present (skipped): {', '.join(skipped_events)}")
 PY
+    local py_exit=$?
+    if [ $py_exit -ne 0 ]; then
+      echo ""
+      echo "  ERROR: settings.json merge failed (exit $py_exit)."
+      echo "  The following Forge hook events/blocks were NOT installed:"
+      echo "    PreToolUse  — validate-commit, validate-push, coworker-read-gate, role-write-guard"
+      echo "    PostToolUse — contract-reminder, grok-watch"
+      echo "    PreCompact  — pre-compact"
+      echo "  Fix: manually merge $FORGE_DIR/core/settings.json into $TARGET/.claude/settings.json"
+    fi
   else
     echo "  WARN: settings.json exists but Python unavailable — skipping merge"
+    echo "        Forge enforcement hooks NOT installed. Merge manually:"
+    echo "        $FORGE_DIR/core/settings.json -> $TARGET/.claude/settings.json"
   fi
 }
 install_settings
@@ -300,7 +373,7 @@ install_gitignore() {
     line="${line%$'\r'}"   # strip CR — template may have CRLF endings, else dedup never matches
     [ -z "$line" ] && continue
     [[ "$line" == \#* ]] && continue
-    if ! grep -qF -- "$line" "$TARGET/.gitignore" 2>/dev/null; then
+    if ! grep -qxF -- "$line" "$TARGET/.gitignore" 2>/dev/null; then
       echo "$line" >> "$TARGET/.gitignore"
       added=$((added+1))
     fi
@@ -398,7 +471,13 @@ fi
 
 # --- SUMMARY ---
 echo ""
-echo "=== Installation complete ==="
+if [ "$CLAUDE_MD_RESULT" = "2" ]; then
+  echo "=== Installation completed WITH ISSUES ==="
+  echo "  CLAUDE.md: CONFLICT PENDING — not modified"
+  echo "  All other components were installed normally."
+else
+  echo "=== Installation complete ==="
+fi
 echo "  Agents:   $(ls "$TARGET/.claude/agents/" 2>/dev/null | wc -l)"
 echo "  Commands: $(ls "$TARGET/.claude/commands/" 2>/dev/null | wc -l)"
 echo "  Hooks:    $(ls "$TARGET/.claude/hooks/" 2>/dev/null | wc -l)"
@@ -411,14 +490,16 @@ echo "  .claude/rules/      (modular doctrine)"
 echo ""
 if [ -d "$BACKUP_DIR" ]; then
   echo "Backup: $BACKUP_DIR"
-  echo "Rollback: bash install.sh $TARGET --rollback"
+  echo "Rollback: bash install.sh \"$TARGET\" --rollback"
   echo ""
 fi
 echo "Next steps:"
 echo "  1. Review manifest.md — confirm repo_access (default: private-solo)"
 echo "  2. If repo is shared/public, run scripts/switch-repo-access.sh BEFORE first commit"
 echo "  3. Open project in Claude Code, run /f-start"
-
 if [ "$CLAUDE_MD_RESULT" = "2" ]; then
+  echo ""
+  echo "  CLAUDE.md conflict: resolve manually, then run:"
+  echo "    bash install.sh \"$TARGET\" --apply-proposal"
   exit 2
 fi

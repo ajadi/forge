@@ -16,7 +16,7 @@ coworker ask --paths <path1> [<path2> ...] --allow-code --profile code --questio
 
 ## Rules
 - **Batch all paths into one `--paths` list.** This is the main use: several files that are each under the read-gate's per-file threshold but together would bloat context. The gate is per-file and stateless — it will not catch the cumulative load; this command does.
-- Default `--profile code` (non-reasoning grok, cheapest). For cross-file synthesis or call-graph-style reasoning use `--profile digest` (reasoning grok).
+- Default `--profile code` (non-reasoning grok, cheapest). For cross-file synthesis or call-graph-style reasoning use `--profile digest` (reasoning grok — this is a valid installed profile, not undefined).
 - Relay coworker's answer concisely. Do **not** re-read the files yourself afterwards.
 - Source code you must reason over line-by-line: read it directly instead — coworker is for bulk / non-critical reads.
 - If coworker is unavailable (not installed / `🟥` out of credits / `COWORKER_READ_GATE=off`), say so and fall back to reading directly.

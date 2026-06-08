@@ -8,7 +8,18 @@ set +e
 INPUT=$(cat)
 
 # If we already blocked once this turn, don't loop.
-echo "$INPUT" | grep -q '"stop_hook_active":true' && exit 0
+# Use whitespace-tolerant match; prefer python/jq when available for JSON correctness.
+_stop_active=false
+if command -v jq >/dev/null 2>&1; then
+    printf '%s' "$INPUT" | jq -e '.stop_hook_active == true' >/dev/null 2>&1 && _stop_active=true
+elif command -v python3 >/dev/null 2>&1; then
+    printf '%s' "$INPUT" | python3 -c 'import json,sys; exit(0 if json.load(sys.stdin).get("stop_hook_active") else 1)' 2>/dev/null && _stop_active=true
+elif command -v python >/dev/null 2>&1; then
+    printf '%s' "$INPUT" | python -c 'import json,sys; exit(0 if json.load(sys.stdin).get("stop_hook_active") else 1)' 2>/dev/null && _stop_active=true
+else
+    printf '%s' "$INPUT" | grep -qE '"stop_hook_active"[[:space:]]*:[[:space:]]*true' && _stop_active=true
+fi
+[ "$_stop_active" = "true" ] && exit 0
 
 # --- Gate 1: a task is in_progress but never reached reality-check ---
 if [ -d "tasks" ]; then

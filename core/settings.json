@@ -29,8 +29,10 @@
     ],
     "deny": [
       "Bash(rm -rf *)",
-      "Bash(git push --force*)",
-      "Bash(git push -f *)",
+      "Bash(git push --force )",
+      "Bash(git push --force)",
+      "Bash(git push -f )",
+      "Bash(git push -f)",
       "Bash(git reset --hard*)",
       "Bash(git clean -f*)",
       "Bash(sudo *)",
@@ -111,7 +113,7 @@
     ],
     "PostToolUse": [
       {
-        "matcher": "Task|Agent|TaskCreate",
+        "matcher": "Task",
         "hooks": [
           {
             "type": "command",

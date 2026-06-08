@@ -1,3 +1,7 @@
+---
+description: Consolidate project memory — deduplicate, fix stale facts, prune index to under 200 lines
+---
+
 Run 4-phase memory consolidation via the dream subagent.
 
 $ARGUMENTS

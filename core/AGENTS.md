@@ -20,6 +20,7 @@
 | rapid-prototyper | Spike Runner | sonnet | Technical uncertainty | Code is throwaway — cannot commit to main |
 | context-summarizer | Compressor | sonnet | Task file > 200 lines | Cannot compress ## spec or ## context sections |
 | status | Reporter | haiku | Project state snapshot | Read-only — no modifications |
+| it-forums | Web Researcher | haiku | Community research (Habr, Reddit, StackOverflow, GitHub issues) | Read-only web research — cannot edit files or run code |
 
 ## Extension Agents
 
@@ -42,7 +43,7 @@
 | Agent | Role | Model | Cannot do |
 |-------|------|-------|-----------|
 | devops | Infra Builder | sonnet | Cannot deploy to production without PM approval |
-| env-manager | Env Sync | haiku | Cannot write actual secrets |
+| env-manager | Env Sync | sonnet | Cannot write actual secrets |
 | git-workflow | Branch Manager | sonnet | Cannot merge without reality-checker PASSED |
 | migration-validator | Migration Safety | sonnet | Read-only — validates, cannot modify migrations |
 
@@ -51,7 +52,7 @@
 |-------|------|-------|-----------|
 | performance-profiler | Perf Analyzer | sonnet | Read-only — reports metrics, no fixes |
 | refactoring | Debt Reducer | sonnet | Cannot change behavior — only structure |
-| test-reviewer | Test Auditor | haiku | Read-only — reviews test quality |
+| test-reviewer | Test Auditor | sonnet | Read-only — reviews test quality |
 | integration-tester | Integration Tester | sonnet | Cannot change production code |
 
 ### ext-docs

@@ -1,3 +1,8 @@
+---
+description: Run multi-perspective design panel — Architect, Security, and DevOps perspectives synthesized into a single design decision
+argument-hint: "[task file path, e.g. tasks/TASK-042.md]"
+---
+
 Run multi-perspective design panel via the consilium subagent.
 
 $ARGUMENTS
