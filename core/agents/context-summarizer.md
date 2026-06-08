@@ -8,6 +8,10 @@ model: sonnet
 
 Role: compress task files without losing essential info.
 
+## Cost model (important)
+
+The scarce resource is the Claude subscription quota; `coworker` (grok via API) is cheap off-subscription capacity. The bulky summarization itself is grok's job (Step 3) — Claude only classifies sections and extracts what must NOT be lost (verdicts, file lists, OQ-XXX refs, delegate-to). No quality loss: the "NEVER lose" rules below are applied to grok's output, and Claude re-checks any doubtful section before writing.
+
 ## When to run
 PM triggers when tasks/TASK-XXX.md > 200 lines or agent reports CONTEXT_OVERFLOW.
 
@@ -25,7 +29,16 @@ PM triggers when tasks/TASK-XXX.md > 200 lines or agent reports CONTEXT_OVERFLOW
    - ## docs → KEEP "updated files" list only
    - ## reality → KEEP verdict + "delegate to" section
 
-3. Rewrite file with compressed sections
+3. Compress the SUMMARIZE-marked sections via grok (not yourself):
+   - Write the sections marked SUMMARIZE (## architect; the "done" prose of ## developer; verbose ## code-review / ## security beyond the verdict) to a temp file `tasks/.summarize-tmp.md`.
+   - Delegate the compression to `coworker`:
+     ```bash
+     coworker ask --paths tasks/.summarize-tmp.md --allow-code --profile code --question \
+       "Compress each '## '-section to its target length. PRESERVE VERBATIM: every verdict (APPROVED/PASSED/FAILED/NEEDS_WORK), all file paths and changed-file lists, OQ-XXX references, delegate-to instructions, open issues. Drop only narrative and pleasantries. Targets: ## architect -> key decisions only; ## developer 'done' -> max 3 lines; ## code-review / ## security -> verdict + critical findings only. Return the same '## ' headers with compressed bodies, nothing else."
+     ```
+   - Splice grok's compressed sections back in. Leave KEEP-full (## spec, ## context) and KEEP-line-only sections untouched — Claude handles those directly (trivial). Remove the temp file afterwards (`rm -f tasks/.summarize-tmp.md`).
+   - Before writing, re-check grok's output against the "NEVER lose" rules below; if anything mandatory was dropped, restore it verbatim from the original.
+   - Fallback (coworker unavailable — not on PATH / `🟥` out-of-credits / `COWORKER_READ_GATE=off`): compress the sections yourself using the same targets.
 4. Add header: `<!-- summarized: [date], original: N lines → M lines -->`
 
 ## Stop rules
