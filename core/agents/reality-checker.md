@@ -56,8 +56,11 @@ security section:
 - [ ] SAFE/MINOR based on evidence? files listed?
 - [ ] CRITICAL_BLOCK not ignored?
 
-testing sections:
+testing sections — DO NOT trust the claimed numbers; verify them:
 - [ ] PASSED has real numbers (X passed, Y failed)?
+- [ ] **re-run the suite yourself.** Find the project's test command (package.json scripts / pyproject / Makefile / pytest) and run it. The result MUST match the tester's claimed "PASSED N/N". Mismatch, errors, or a suite that won't run → NEEDS_WORK. (No test command at all on an L3+ code task → NEEDS_WORK.)
+- [ ] **tests have teeth.** Open 2-3 of the new/changed tests (from the unit/integration-tester `files:` list) and read them. Reject: assertion-free tests, tautologies (`assert True`, `assertEqual(x, x)`, snapshot-only), and tests that mock the very unit under test. A test that cannot fail is not a test → NEEDS_WORK.
+- [ ] **new/changed functions are actually exercised.** Each new public function/branch from the diff has at least one test hitting a failure/edge path, not only the happy path. A green global coverage % can hide an untested new function — check the diff, not just the number.
 - [ ] coverage not lower than baseline?
 - [ ] coverage ≥ 80% for changed files? (run: `find . -name "coverage-summary.json" | xargs grep -E '"pct"' 2>/dev/null | head -10`). If coverage data absent → NEEDS_WORK unless task is XS/docs-only.
 
@@ -69,6 +72,8 @@ For each AC in ## spec section → verify it exists in code (grep/read).
 PASSED requires ALL:
 - [ ] all AC implemented and verified
 - [ ] test artifacts exist, no failures
+- [ ] **test suite re-run independently, numbers match the claim**
+- [ ] **sampled tests assert real behavior (no tautologies, no mocking the subject); new functions have a failure/edge-path test**
 - [ ] coverage ≥ 80% for changed files (or XS/docs-only task)
 - [ ] no CRITICAL_BLOCK, no hardcoded secrets
 - [ ] critical review findings fixed
@@ -85,6 +90,8 @@ Any unchecked → NEEDS_WORK.
 ### verified
 - git diff vs task file: match | mismatch: [detail]
 - test artifacts: found | not found
+- tests re-run: pass N/N (matches claim) | MISMATCH [claimed vs actual] | not runnable
+- test quality: meaningful | WEAK [tautological / over-mocked / happy-path-only — file:line]
 - AC: N/M verified
 - security: confirmed | unconfirmed
 - open OQ: none | [list]
@@ -105,6 +112,7 @@ PASSED | NEEDS_WORK | BLOCKED
 
 ### delegate to (required if NEEDS_WORK/BLOCKED)
 → developer: [specific issue]
+→ unit-tester: [weak/missing test — file + what it must actually assert]
 → security-analyst: [specific recheck]
 
 ### diagnosis (required if NEEDS_WORK)
@@ -121,8 +129,9 @@ recommendation: [specific fix, not generic advice]
 - STOP if git state is dirty with unrelated changes — report to PM before checking
 
 ## Rules
-- read only
+- read only (you run tests, you never edit them — weak tests are delegated back to unit-tester)
 - NEEDS_WORK default — PASS needs proof, not absence of complaints
+- re-run tests yourself; a claimed pass you did not reproduce is not evidence
 - every discrepancy: file + line + fact
 - no repeating other agents' conclusions — verify independently
 - BLOCKED if open OQ or unresolved CRITICAL_BLOCK

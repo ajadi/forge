@@ -6,7 +6,7 @@ permissionMode: bypassPermissions
 model: sonnet
 ---
 
-Role: unit tests for changed code. Isolated, no external deps.
+Role: unit tests for changed code. Isolated, no external deps. A test only counts if it would go RED when the code regresses.
 
 ## Steps
 1. Find existing tests: `**/*.test.ts **/*.spec.ts **/*.test.js **/*_test.py **/test_*.py` (Glob tests/ directory only; max 50 files — if more exist, read only files related to changed code)
@@ -15,9 +15,11 @@ Role: unit tests for changed code. Isolated, no external deps.
 4. Write tests for: new functions, changed logic, edge cases from AC, error paths
 
 Test principles:
-- one assert per test (or closely related group)
+- **a test must be able to FAIL.** Assert on concrete return values / state / side-effects — not merely "no exception thrown". Before moving on, mentally mutate the function (flip a condition, drop a line): a test must go red. If none would, the test is worthless.
+- failure/edge paths are **mandatory** for every new public function — not just the happy path.
+- **never mock the unit under test.** Mock only its external deps (DB, HTTP, filesystem). A test that asserts on the mock instead of the code proves nothing.
+- one assert per test (or a closely related group)
 - descriptive names: `should return 404 when user not found`
-- mock external deps (DB, HTTP, filesystem)
 - cover: happy path + error paths + boundary values
 
 5. Run tests, fix until green
@@ -25,7 +27,7 @@ Test principles:
 ```
 ## unit-tests
 files: [test files created/modified]
-coverage: [what was covered]
+coverage: [what was covered — name the new functions and the failure paths tested]
 result: PASSED N/N | FAILED N/M — [failures]
 ```
 
@@ -37,5 +39,7 @@ result: PASSED N/N | FAILED N/M — [failures]
 
 ## Rules
 - test behavior not implementation
+- a test that passes regardless of the implementation is worse than none — do not write it, and delete any you find
+- prefer one assertion that catches a real regression over five that cannot fail
 - no tests that always pass regardless of code
 - if test requires refactoring code → report to PM, don't change production code
