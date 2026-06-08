@@ -1,5 +1,5 @@
 ---
-name: f-it-forums
+name: it-forums
 description: Searches IT sites/forums (Habr, Reddit, StackOverflow, GitHub issues, etc.) for targeted answers and returns a concise sourced digest. Runs on Haiku to keep the orchestrator's context and quota free. Use for "find discussions / known issues / how others solved X" on community sites.
 tools: WebSearch, WebFetch, Read, Glob, Grep
 model: haiku
