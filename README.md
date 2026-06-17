@@ -187,7 +187,7 @@ forge/
     ext-quality/            # performance-profiler, refactoring, test-reviewer, integration-tester
     ext-docs/               # documentation, changelog-agent
     ext-planning/           # estimator, consilium
-    ext-reflection/         # reflect, dream, optimizer, onboarding, retro
+    ext-reflection/         # reflect, dream, optimizer, onboarding, retro, platform-sync
 
   presets/                  # Quick-start configurations
 ```
@@ -239,7 +239,7 @@ Installed into `.claude/hooks/` and wired in `.claude/settings.json`. All hooks 
 | **ext-quality** | performance-profiler, refactoring, test-reviewer, integration-tester | Large codebases |
 | **ext-docs** | documentation, changelog-agent | Open-source, team projects |
 | **ext-planning** | estimator, consilium | L3-L4 tasks, team planning |
-| **ext-reflection** | reflect, dream, optimizer, onboarding, retro | Long-running projects |
+| **ext-reflection** | reflect, dream, optimizer, onboarding, retro, platform-sync | Long-running projects |
 
 ## Key Commands
 
@@ -254,6 +254,7 @@ Installed into `.claude/hooks/` and wired in `.claude/settings.json`. All hooks 
 | `/next-task` | What to work on next (skill) |
 | `/f-dream` | Run memory consolidation (audits `memory/*.md`) |
 | `/f-reflect` | Post-task reflection and learning |
+| `/f-platform-sync` | Actualize Forge against Anthropic's live platform docs (propose-only) |
 | `/f-spike` | Technical spike to validate hypothesis |
 | `/f-new-task` | Create a new task file |
 | `/f-scope-check` | Check for scope creep vs tz.md |
