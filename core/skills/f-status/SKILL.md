@@ -1,5 +1,5 @@
 ---
-name: status
+name: f-status
 description: Show current project status — backlog progress, active tasks, open questions. Use when the user asks about project state, what's done, what's in progress, or what's next.
 user-invocable: true
 allowed-tools: Read, Glob

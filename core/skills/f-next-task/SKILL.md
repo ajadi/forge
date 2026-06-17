@@ -1,5 +1,5 @@
 ---
-name: next-task
+name: f-next-task
 description: Show which task to work on next based on priority and dependencies. Use when the user asks "what should I do next", "what's the next task", or "what should we work on".
 user-invocable: true
 allowed-tools: Read, Glob

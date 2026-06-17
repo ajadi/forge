@@ -2,6 +2,15 @@
 
 Lookup tables for PM agent. No workflow here — workflow is in pm.md.
 
+## Naming convention
+
+All user-invocable Forge skills and commands use the `f-` prefix (the Forge
+namespace) — e.g. `f-status`, `f-next-task`, `f-setup-project`, `f-audit`.
+This avoids collision with Claude Code's built-in commands (e.g. `/status`)
+and with third-party commands. Internal agents (e.g. the `status` agent) and
+scripts (e.g. `statusline.sh`) are NOT user-invocable and keep their plain
+names. When adding a new skill or command, prefix it with `f-`.
+
 ## Complexity levels (L1-L4)
 
 | Level | Scope | Pipeline |

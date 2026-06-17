@@ -175,7 +175,7 @@ forge/
     hooks/                  # Session lifecycle, git validation, metrics
     rules/                  # Modular doctrine: repo-access, commit-policy, production-safety
     scripts/                # switch-repo-access, framework-state-mode, lib/merge_claude_md.py
-    skills/                 # next-task, status, f-setup-project
+    skills/                 # f-next-task, f-status, f-setup-project
     templates/              # tz-template, adr-template, manifest.md.tmpl, gitignore.tmpl
     pm-ref.md               # Pipeline reference
     settings.json           # Base permissions, hooks
@@ -250,8 +250,8 @@ Installed into `.claude/hooks/` and wired in `.claude/settings.json`. All hooks 
 | `/f-hotfix` | Emergency fix bypassing normal pipeline |
 | `/f-ba` | Business analyst — collect requirements |
 | `/f-decompose` | Break feature into tasks |
-| `/status` | Show project progress (skill) |
-| `/next-task` | What to work on next (skill) |
+| `/f-status` | Show project progress (skill) |
+| `/f-next-task` | What to work on next (skill) |
 | `/f-dream` | Run memory consolidation (audits `memory/*.md`) |
 | `/f-reflect` | Post-task reflection and learning |
 | `/f-platform-sync` | Actualize Forge against Anthropic's live platform docs (propose-only) |
@@ -260,6 +260,8 @@ Installed into `.claude/hooks/` and wired in `.claude/settings.json`. All hooks 
 | `/f-scope-check` | Check for scope creep vs tz.md |
 | `/f-bug-report` | Structured bug report |
 | `/f-autopilot` | Run the backlog unattended end-to-end; halts only on questions/regressions/deploys, then pushes you |
+
+> **Naming convention:** all user-invocable Forge skills and commands use the `f-` prefix (the Forge namespace) to avoid collision with Claude Code's built-in and third-party commands.
 
 ## Autonomy Ladder
 
@@ -296,7 +298,7 @@ bash install.sh /my/project --preset full
 #   .claude/commands/      <- 27 slash commands (10 core + 17 ext)
 #   .claude/hooks/         <- 13 lifecycle + guard hooks
 #   .claude/rules/         <- 3 modular doctrine files
-#   .claude/skills/        <- 3 custom skills (next-task, status, f-setup-project)
+#   .claude/skills/        <- 3 custom skills (f-next-task, f-status, f-setup-project)
 #   .claude/templates/     <- requirement + ADR templates
 #   .claude/AGENTS.md      <- team roster
 #   .claude/pm-ref.md      <- pipeline reference
