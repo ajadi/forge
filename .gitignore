@@ -1,5 +1,6 @@
 # Runtime state created when Forge runs (incl. dogfooding Forge on itself).
 # The framework SOURCE lives in core/ and extensions/ — these are never source.
+.claude/settings.local.json
 .claude/.current-agent
 .claude/.precompact-ts
 .claude/.rehydrated-ts
@@ -25,6 +26,10 @@ _t2/
 _qa*/
 _itest/
 _bstest.sh
+
+# Internal maintainer notes — kept local, not shipped in the public release
+FORGE-UPGRADE-PROGRESS.md
+IMPROVEMENTS.md
 
 # OS / editor
 .DS_Store

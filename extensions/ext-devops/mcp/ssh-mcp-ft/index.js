@@ -5,7 +5,7 @@
 // Usage (in .mcp.json):
 //   "command": "node",
 //   "args": ["/abs/path/to/ssh-mcp-ft/index.js",
-//            "--host=YOUR_HOST", "--user=YOUR_USER", "--password=..."]
+//            "--host=YOUR_HOST", "--user=YOUR_USER", "--password=YOUR_PASSWORD"]
 //
 // Args: --host= --user= --password= [--port=22]
 // Each tool call opens a fresh SSH connection and closes it when done.

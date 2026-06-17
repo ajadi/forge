@@ -9,9 +9,8 @@
 #      (handoffs/precompact-<ts>.md). Even if the summary drops it, the agent can
 #      recover full state by reading that file after compaction.
 #
-# This hook NEVER blocks compaction (always exit 0). The old MemPalace
-# pre-compact hook blocked compaction until an external save succeeded — that is
-# exactly what used to wedge compaction, and it is gone.
+# This hook NEVER blocks compaction (always exit 0): it only writes state, it
+# never waits on an external save — so it cannot wedge compaction.
 set +e
 
 mkdir -p "handoffs" 2>/dev/null

@@ -77,15 +77,6 @@ fi
 auto_label=""
 [ -f "$cwd/.claude/.autopilot" ] && auto_label=" | 🛫AUTO"
 
-# --- Memory layer (session / orchestrator long-term memory) ---
-# MemPalace is the orchestrator's default memory (~/.claude/CLAUDE.md + the global
-# mempalace-reminder UserPromptSubmit hook), with a flat-file fallback. Shows the
-# configured default (palace) unless ~/.claude/.mempalace-down exists (the model
-# sets that marker on a detected fallback). NOTE: reflects SESSION memory; Forge
-# pipeline agents always use flat memory/*.md regardless.
-mem_label=" | mem:palace"
-[ -f "$HOME/.claude/.mempalace-down" ] && mem_label=" | mem:files"
-
 # --- Session depth meter (turns this session; turn-counter.sh) ---
 depth_label=""
 DFILE="$cwd/.claude/.turn-count"
@@ -103,4 +94,4 @@ if [ -f "$DFILE" ]; then
 fi
 
 # --- Assemble ---
-printf "%s" "${ctx_label} | ${model}${agent_label}${grok_label}${auto_label}${mem_label}${tasks_label}${oq_label}${depth_label}"
+printf "%s" "${ctx_label} | ${model}${agent_label}${grok_label}${auto_label}${tasks_label}${oq_label}${depth_label}"
