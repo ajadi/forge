@@ -1,0 +1,14 @@
+{
+  "name": "ssh-mcp-ft",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "MCP stdio server: SSH exec + SFTP file transfer (upload/download)",
+  "bin": {
+    "ssh-mcp-ft": "index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "ssh2": "^1.17.0",
+    "zod": "^4.4.3"
+  }
+}

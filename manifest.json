@@ -40,6 +40,7 @@
       "description": "CI/CD, Docker, environment management, git workflow",
       "agents": ["devops", "env-manager", "git-workflow", "migration-validator"],
       "commands": ["f-devops", "f-env", "f-git-workflow", "f-validate-migration"],
+      "mcp": ["ssh-mcp-ft"],
       "recommended_for": ["deployed services", "team projects"]
     },
     "ext-quality": {
