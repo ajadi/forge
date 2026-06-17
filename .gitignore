@@ -2,6 +2,7 @@
 # The framework SOURCE lives in core/ and extensions/ — these are never source.
 .claude/.current-agent
 .claude/.precompact-ts
+.claude/.rehydrated-ts
 .claude/.oq-state
 .claude/dream-state.json
 .claude/.grok-broke

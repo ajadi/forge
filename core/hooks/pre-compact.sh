@@ -91,4 +91,9 @@ emit "- Memory is flat files: grep memory/*.md before stating project facts; app
 emit "=== END SESSION STATE ==="
 
 echo "Compaction at $(date) -> $SNAP" >> "handoffs/compaction-log.txt" 2>/dev/null
+
+# Write pending marker for rehydrate.sh (post-compact context restore, one-shot).
+# SNAP is a relative path; rehydrate.sh resolves it against CLAUDE_PROJECT_DIR.
+echo "$(date +%s) $SNAP" > "${CLAUDE_PROJECT_DIR:-.}/.claude/.precompact-ts" 2>/dev/null
+
 exit 0
