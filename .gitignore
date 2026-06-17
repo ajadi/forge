@@ -3,6 +3,7 @@
 .claude/.current-agent
 .claude/.precompact-ts
 .claude/.rehydrated-ts
+.claude/.turn-count
 .claude/.oq-state
 .claude/dream-state.json
 .claude/.grok-broke

@@ -97,4 +97,7 @@ except Exception as e:
     fi
 fi
 
+# Reset the session depth counter (turn-counter.sh increments it each turn).
+echo 0 > .claude/.turn-count 2>/dev/null
+
 exit 0

@@ -86,5 +86,21 @@ auto_label=""
 mem_label=" | mem:palace"
 [ -f "$HOME/.claude/.mempalace-down" ] && mem_label=" | mem:files"
 
+# --- Session depth meter (turns this session; turn-counter.sh) ---
+depth_label=""
+DFILE="$cwd/.claude/.turn-count"
+if [ -f "$DFILE" ]; then
+    DN=$(tr -cd '0-9' < "$DFILE" 2>/dev/null)
+    if [ -n "$DN" ] && [ "$DN" -gt 0 ] 2>/dev/null; then
+        DSOFT="${FORGE_DEPTH_SOFT:-40}"
+        echo "$DSOFT" | grep -qE '^[0-9]+$' || DSOFT=40
+        if [ "$DSOFT" -gt 0 ] && [ "$DN" -ge "$DSOFT" ] 2>/dev/null; then
+            depth_label=" | ⚠️d:${DN}"
+        else
+            depth_label=" | d:${DN}"
+        fi
+    fi
+fi
+
 # --- Assemble ---
-printf "%s" "${ctx_label} | ${model}${agent_label}${grok_label}${auto_label}${mem_label}${tasks_label}${oq_label}"
+printf "%s" "${ctx_label} | ${model}${agent_label}${grok_label}${auto_label}${mem_label}${tasks_label}${oq_label}${depth_label}"
