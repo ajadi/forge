@@ -66,16 +66,20 @@ You give the PM agent a task. It assesses complexity and routes it through the *
 | **L3** | Feature | Architect → Developer → CodeReview + Security → UnitTest → RealityCheck → commit |
 | **L4** | Major feature | Full pipeline + design panel (Consilium) |
 
-```
-You ──▶ Orchestrator (Claude Code, reads CLAUDE.md)
-          └─▶ PM agent ──┬─ Developer        implements
-                         ├─ Code Reviewer    diff-aware review
-                         ├─ Security Analyst OWASP / STRIDE
-                         ├─ Reality Checker  final gate (default NEEDS_WORK)
-                         ├─ Architect        designs L3–L4
-                         └─ … up to 37 agents
-                              │
-                    memory/*.md  ← flat-file memory every agent greps before guessing
+```mermaid
+flowchart TD
+    U([You: a task]) --> O[Orchestrator · Claude Code]
+    O --> PM{{PM agent — routes by complexity L1–L4}}
+    PM --> DEV[Developer · implements]
+    PM --> CR[Code Reviewer]
+    PM --> SEC[Security Analyst]
+    PM --> RC[Reality Checker · final gate]
+    PM --> ARCH[Architect · L3–L4 design]
+    DEV --> MEM[(memory/*.md · flat-file memory)]
+    CR --> MEM
+    SEC --> MEM
+    RC ==> CM([✓ commit])
+    MEM -. grep before guessing .-> PM
 ```
 
 Four things keep it from drifting, leaking, or running up cost:
