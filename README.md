@@ -8,6 +8,8 @@ A PM agent orchestrates specialized agents that implement, review, test, and shi
 Roles are **mechanically enforced**, memory lives in **plain files**, and state
 **survives context compaction**. No service, no vector DB, no infra to host.
 
+<img src="assets/demo.svg" alt="Forge: one prompt routes a gated multi-agent pipeline, not a lone agent" width="780">
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 ![Claude Code](https://img.shields.io/badge/for-Claude%20Code-8A2BE2.svg)
 ![Version](https://img.shields.io/badge/version-2.4-blue.svg)
