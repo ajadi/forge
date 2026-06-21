@@ -89,7 +89,7 @@ Four things keep it from drifting, leaking, or running up cost:
 - **Token economy** — large non-source reads are delegated to a cheap model; noisy shell output is trimmed before it reaches context. The reasoning model stays on code.
 - **Long-session durability** — state is dumped before compaction and rehydrated exactly once after, so long runs don't lose the thread.
 
-> **Note — the token-economy read-delegation needs a *second*, cheap model** (e.g. xAI Grok via the [`coworker`](docs/coworker-setup.md) CLI). It is **optional**: if `coworker` isn't installed the read-gate **fails open** (every read is allowed), so Forge runs fully without it — you opt in for the savings. It only ever sends *non-source* files to that model, never your code. See [docs/coworker-setup.md](docs/coworker-setup.md).
+> **Note — the token-economy read-delegation needs a *second*, cheap model** (e.g. xAI Grok via the [`coworker`](core/docs/coworker-setup.md) CLI). It is **optional**: if `coworker` isn't installed the read-gate **fails open** (every read is allowed), so Forge runs fully without it — you opt in for the savings. It only ever sends *non-source* files to that model, never your code. See [core/docs/coworker-setup.md](core/docs/coworker-setup.md).
 
 ## Status
 
@@ -111,6 +111,17 @@ on-device embeddings + tiered retrieval). Forge ships an optional capture adapte
 feeds pipeline events (PM steps, reality-checks, decisions, retrospectives) straight into
 Ember. Use either alone, or both together.
 
+## Token economy — optional read-delegation (`coworker`)
+
+Forge can offload **large non-source reads** (docs, logs, data, boilerplate) to a
+**separate cheap model** — [`coworker`](core/docs/coworker-setup.md), backed by xAI Grok —
+keeping the reasoning model's context on your code. It is **opt-in and safe by default**:
+
+- If `coworker` isn't installed, the read-gate **fails open** — every read is allowed and Forge runs fully without it.
+- **Source code is never sent** to the cheap model — only non-source files, and only above a size threshold.
+
+**The threshold is yours to set** — `COWORKER_DELEGATE_TOKENS` (default **5000** tokens, ≈ 20 KB): non-source files at/above it are delegated to coworker, smaller ones are read in-context. Grok is far cheaper, so **lower it** (e.g. `3000`) to save more aggressively, or **raise it** (e.g. `10000`) to keep more in the reasoning model — below ~`2000` the per-call overhead outweighs the gain. Files at/above `COWORKER_GREP_TOKENS` (default `100000`) are grep-only; source is always exempt. Full setup + privacy notes: [core/docs/coworker-setup.md](core/docs/coworker-setup.md).
+
 ---
 
 <details>
@@ -130,9 +141,7 @@ Ember. Use either alone, or both together.
 | `pre-compact` | PreCompact | Dump full state to a durable snapshot + set rehydrate marker |
 | `stop-check` · `session-stop` | Stop | Block stopping mid-pipeline or with unrecorded source changes |
 
-**Tuning knobs:** `COWORKER_READ_GATE` (off to disable), `ROLE_WRITE_GUARD`, `FORGE_BASH_FILTER`, `FORGE_DEPTH_SOFT`, …
-
-**Read-delegation threshold** — `COWORKER_DELEGATE_TOKENS` controls how aggressively the read-gate offloads non-source files to the cheap model. Default **5000** tokens (~20 KB): smaller files are read in-context, larger ones get delegated. Grok is far cheaper, so **lower it** (e.g. `3000`) to save more, or **raise it** (e.g. `10000`) to keep more in the reasoning model — below ~2000 the per-call overhead outweighs the savings. Files at/above `COWORKER_GREP_TOKENS` (default `100000`) are grep-only. Source code is always exempt. Full reference: [docs/coworker-setup.md](docs/coworker-setup.md).
+**Tuning knobs:** `COWORKER_READ_GATE` (off to disable), `COWORKER_DELEGATE_TOKENS` (read-delegation threshold — see [Token economy](#token-economy--optional-read-delegation-coworker) above), `ROLE_WRITE_GUARD`, `FORGE_BASH_FILTER`, `FORGE_DEPTH_SOFT`, …
 
 </details>
 
