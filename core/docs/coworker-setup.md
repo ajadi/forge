@@ -5,8 +5,10 @@ to [`coworker`](https://github.com/Arcanada-one/coworker), a cheap-model CLI bac
 **xAI Grok**. This keeps the reasoning model's context for source code.
 
 The `coworker-read-gate` hook (`.claude/hooks/coworker-read-gate.sh`) enforces it on
-the `Read` tool. It **fails open** — if `coworker` is not installed/configured, reads
-are allowed normally — so this setup is optional but recommended.
+the `Read` tool. **Forge never requires coworker** — the gate **fails open**: if
+`coworker` is not installed/configured, every read is allowed normally. You opt in
+for the token savings, which means standing up a second (paid) model. Full fail-open
+behavior is in §8; out-of-credits handling in §9; what leaves your machine in §10.
 
 > Everything below is verified against `coworker-cli` 0.7.0 (2026-06-05).
 
@@ -118,3 +120,52 @@ RTK is independent of read-delegation — `ask`/`write` work without it.
 | `COWORKER_GREP_TOKENS` | `100000` | non-source reads at/above this → grep-only (blocked) |
 
 Source files (code) are always exempt regardless of size.
+
+## 8. How the gate decides (fail-open)
+
+The gate's default action on *any* uncertainty is **allow the read** (`exit 0`). It
+denies (`exit 2`) on exactly one confident path: a large non-source file, with
+`coworker` available and the gate on. Every branch:
+
+| Condition | Result |
+|-----------|--------|
+| `COWORKER_READ_GATE=off` | **allow** (kill-switch) |
+| `coworker` not installed | **allow** ← this is why a fresh user is never blocked |
+| `.claude/.grok-broke` marker present (out of credits, see §9) | **allow** |
+| file path not extractable / file not statable | **allow** |
+| extension is source code (`.ts .py .go .rs .java .sh …`) | **allow** (you read your own code) |
+| size not measurable | **allow** |
+| non-source, `est_tokens ≥ COWORKER_DELEGATE_TOKENS` (10k) | **deny** → run `coworker ask …` |
+| non-source, `est_tokens ≥ COWORKER_GREP_TOKENS` (100k) | **deny** → grep-only |
+| otherwise (small non-source) | **allow** |
+
+So you only ever see a block when you have deliberately installed `coworker`, left the
+gate on, and tried to read a *large non-source* file in context. Source is never blocked.
+
+## 9. Out of credits (grok-watch)
+
+xAI exposes no balance API, so Forge detects exhaustion reactively:
+
+- `grok-watch.sh` (PostToolUse Bash) inspects failed `coworker` calls. On a billing /
+  "out of credits" error it writes the marker `.claude/.grok-broke`.
+- While that marker exists: the read-gate **fails open** (reads run on the main model),
+  and the statusline shows a 🟥 `grok:NO-CREDITS` flag so you know delegation is paused.
+- It **auto-recovers**: the next *successful* `coworker` call clears the marker and the
+  gate resumes. No manual reset needed after topping up.
+
+You are never hard-blocked for being out of credits — delegation simply turns itself off.
+
+## 10. Privacy — what leaves your machine
+
+`coworker ask` / `coworker write` send the referenced corpus to **xAI's API** (your
+key, your account). Know the boundary:
+
+- **Source code is never sent** by the gate — it is exempt, so your code stays local.
+- **Non-source content you delegate IS sent** to xAI (docs, logs, data). Don't delegate
+  files containing secrets or sensitive data; the gate sizes files, it does not redact them.
+- Keys live in env vars only (§2) — never in the repo.
+- **RTK (§6) is local**: it compresses shell output through the on-machine `rtk` binary
+  and does **not** call any API. Only `ask`/`write` reach xAI.
+
+If a project must keep all content on-machine, simply don't install `coworker` (or set
+`COWORKER_READ_GATE=off`) — Forge runs fully on the main model, flat-file memory and all.

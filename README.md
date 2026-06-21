@@ -89,6 +89,8 @@ Four things keep it from drifting, leaking, or running up cost:
 - **Token economy** — large non-source reads are delegated to a cheap model; noisy shell output is trimmed before it reaches context. The reasoning model stays on code.
 - **Long-session durability** — state is dumped before compaction and rehydrated exactly once after, so long runs don't lose the thread.
 
+> **Note — the token-economy read-delegation needs a *second*, cheap model** (e.g. xAI Grok via the [`coworker`](docs/coworker-setup.md) CLI). It is **optional**: if `coworker` isn't installed the read-gate **fails open** (every read is allowed), so Forge runs fully without it — you opt in for the savings. It only ever sends *non-source* files to that model, never your code. See [docs/coworker-setup.md](docs/coworker-setup.md).
+
 ## Status
 
 Forge is **v2.4**, MIT-licensed, and used in real multi-agent builds.
