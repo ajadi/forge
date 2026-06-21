@@ -11,7 +11,7 @@
 #
 # Token estimate: est_tokens = bytes / COWORKER_TOKEN_DIVISOR (default 4).
 #   est_tokens >= COWORKER_GREP_TOKENS  (default 100000) -> deny, grep-only
-#   est_tokens >= COWORKER_DELEGATE_TOKENS (default 10000) -> deny, use coworker
+#   est_tokens >= COWORKER_DELEGATE_TOKENS (default 5000) -> deny, use coworker
 #   otherwise -> allow
 #
 # FAIL OPEN: if `coworker` is not installed/configured, or anything is
@@ -61,7 +61,7 @@ esac
 
 # --- estimate token size of non-source file ---
 DIVISOR="${COWORKER_TOKEN_DIVISOR:-4}"
-DELEGATE_TOKENS="${COWORKER_DELEGATE_TOKENS:-10000}"
+DELEGATE_TOKENS="${COWORKER_DELEGATE_TOKENS:-5000}"
 GREP_TOKENS="${COWORKER_GREP_TOKENS:-100000}"
 
 BYTES=$(wc -c < "$NORM_PATH" 2>/dev/null | tr -d ' ')

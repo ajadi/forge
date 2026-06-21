@@ -116,7 +116,7 @@ RTK is independent of read-delegation — `ask`/`write` work without it.
 |-----|---------|---------|
 | `COWORKER_READ_GATE` | `on` | set `off` to disable the gate entirely |
 | `COWORKER_TOKEN_DIVISOR` | `4` | bytes-per-token estimate (`est_tokens = bytes / divisor`) |
-| `COWORKER_DELEGATE_TOKENS` | `10000` | non-source reads at/above this → delegate to coworker |
+| `COWORKER_DELEGATE_TOKENS` | `5000` | non-source reads at/above this (~20 KB) → delegate to coworker. Lower = more aggressive savings; below ~2000 the per-call overhead outweighs the gain |
 | `COWORKER_GREP_TOKENS` | `100000` | non-source reads at/above this → grep-only (blocked) |
 
 Source files (code) are always exempt regardless of size.
@@ -135,7 +135,7 @@ denies (`exit 2`) on exactly one confident path: a large non-source file, with
 | file path not extractable / file not statable | **allow** |
 | extension is source code (`.ts .py .go .rs .java .sh …`) | **allow** (you read your own code) |
 | size not measurable | **allow** |
-| non-source, `est_tokens ≥ COWORKER_DELEGATE_TOKENS` (10k) | **deny** → run `coworker ask …` |
+| non-source, `est_tokens ≥ COWORKER_DELEGATE_TOKENS` (5k, ~20 KB) | **deny** → run `coworker ask …` |
 | non-source, `est_tokens ≥ COWORKER_GREP_TOKENS` (100k) | **deny** → grep-only |
 | otherwise (small non-source) | **allow** |
 

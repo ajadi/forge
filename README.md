@@ -130,7 +130,9 @@ Ember. Use either alone, or both together.
 | `pre-compact` | PreCompact | Dump full state to a durable snapshot + set rehydrate marker |
 | `stop-check` · `session-stop` | Stop | Block stopping mid-pipeline or with unrecorded source changes |
 
-Tuning knobs: `COWORKER_READ_GATE`, `ROLE_WRITE_GUARD`, `FORGE_BASH_FILTER`, `FORGE_DEPTH_SOFT`, …
+**Tuning knobs:** `COWORKER_READ_GATE` (off to disable), `ROLE_WRITE_GUARD`, `FORGE_BASH_FILTER`, `FORGE_DEPTH_SOFT`, …
+
+**Read-delegation threshold** — `COWORKER_DELEGATE_TOKENS` controls how aggressively the read-gate offloads non-source files to the cheap model. Default **5000** tokens (~20 KB): smaller files are read in-context, larger ones get delegated. Grok is far cheaper, so **lower it** (e.g. `3000`) to save more, or **raise it** (e.g. `10000`) to keep more in the reasoning model — below ~2000 the per-call overhead outweighs the savings. Files at/above `COWORKER_GREP_TOKENS` (default `100000`) are grep-only. Source code is always exempt. Full reference: [docs/coworker-setup.md](docs/coworker-setup.md).
 
 </details>
 
